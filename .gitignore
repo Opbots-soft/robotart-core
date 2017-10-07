@@ -99,3 +99,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# PyCharm stuff
+**/.idea/workspace.xml
+**/.idea/tasks.xml
+**/.idea/*.iws
+*__jb_tmp__
