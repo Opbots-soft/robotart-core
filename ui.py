@@ -14,6 +14,10 @@ class DummyUI(Frame):
         self.quit_btn["text"] = "Quit"
         self.quit_btn["command"] = self.quit
         self.quit_btn.pack({"side" : "left"})
+        self.colors_btn = Button(self)
+        self.colors_btn["text"] = "Edit paints"
+        self.colors_btn["command"] = self.edit_paints
+        self.colors_btn.pack({"side": "left"})
         self.capture_btn = Button(self)
         self.capture_btn["text"] = "Capture image"
         self.capture_btn["command"] = self.input_image
@@ -29,7 +33,7 @@ class DummyUI(Frame):
 
     def __init__(self, master=None):
         super().__init__(master)
-        self.quit_btn = self.capture_btn = self.proc_btn = self.start_btn = None
+        self.quit_btn = self.colors_btn = self.capture_btn = self.proc_btn = self.start_btn = None
         self.pack()
         self.create_widgets()
         # Init the modules
@@ -42,6 +46,14 @@ class DummyUI(Frame):
         # Timing
         self.last_frame_time = time.perf_counter()
 
+    def edit_paints(self):
+        # Edit what paints are available for the robot to use. Maybe
+        # later we can just take photos of the paints so the robot
+        # automatically detects the colors and puts it in the program...
+        self.imgproc.my_palette.add_paint()
+        self.imgproc.my_palette.remove_paint()
+        # Probably display the paint colors and have add/remove buttons?
+
     def input_image(self):
         # This should be called by a 'take image' button
         # Take an image from the camera
@@ -50,13 +62,28 @@ class DummyUI(Frame):
         # Show 'process' button
 
     def run_processing(self):
-        if self.image is not None:
+        if self.image is not None \
+                and self.imgproc.my_palette.available_paints is not None:
             # Should be called by a 'process' button
             # Runs image processing to generate planned moves
-            brush_strokes = self.imgproc.process_image(self.image)
+
+            self.imgproc.subsample_image(self.image)
+            self.imgproc.my_palette.process_colors(self.imgproc.img, num_colors=8)
+            self.generate_layers()
+
+            brush_strokes = self.imgproc.process_image()
             self.mech.set_moves(self.control.plan_moves(brush_strokes))
-        else:
+        elif self.image is None:
             print('Need to take an image!')
+        else:
+            print('Need to add paints!')
+
+    def generate_layers(self):
+        # Use this as loop to keep UI responsive???
+        self.imgproc.get_layers()
+
+        if not self.imgproc.completed:
+            self.after(0, self.generate_layers)
 
     def start_painting(self):
         print('Starting painting!')
