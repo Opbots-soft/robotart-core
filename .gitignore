@@ -105,3 +105,4 @@ ENV/
 **/.idea/tasks.xml
 **/.idea/*.iws
 *__jb_tmp__
+.idea/misc.xml

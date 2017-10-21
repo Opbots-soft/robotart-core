@@ -1,5 +1,6 @@
 import time
 from tkinter import *
+from PIL import Image, ImageTk
 
 from mech import MechControl
 from control import Control
@@ -10,10 +11,12 @@ from camera import Camera
 class DummyUI(Frame):
     """Placeholder UI - feel free to replace with a different framework (not tkinter)"""
     def create_widgets(self):
+        self.camera_display = Label(master=self)
+        self.camera_display.pack()
         self.quit_btn = Button(self)
         self.quit_btn["text"] = "Quit"
         self.quit_btn["command"] = self.quit
-        self.quit_btn.pack({"side" : "left"})
+        self.quit_btn.pack({"side": "left"})
         self.capture_btn = Button(self)
         self.capture_btn["text"] = "Capture image"
         self.capture_btn["command"] = self.input_image
@@ -29,7 +32,7 @@ class DummyUI(Frame):
 
     def __init__(self, master=None):
         super().__init__(master)
-        self.quit_btn = self.capture_btn = self.proc_btn = self.start_btn = None
+        self.camera_display = self.quit_btn = self.capture_btn = self.proc_btn = self.start_btn = None
         self.pack()
         self.create_widgets()
         # Init the modules
@@ -39,6 +42,7 @@ class DummyUI(Frame):
         self.imgproc = ImageProcessing()
         # State
         self.image = None
+        self.tkimg = None
         # Timing
         self.last_frame_time = time.perf_counter()
 
@@ -69,6 +73,12 @@ class DummyUI(Frame):
         time_now = time.perf_counter()
         delta_time = time_now - self.last_frame_time
         self.last_frame_time = time_now
+
+        # Display camera feed
+        img = self.camera.grab_frame()
+        self.tkimg = ImageTk.PhotoImage(image=Image.fromarray(img))
+        self.camera_display.configure(image=self.tkimg)
+        self.update()
 
         # Robot control
         self.mech.tick(delta_time)
