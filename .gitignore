@@ -104,5 +104,6 @@ ENV/
 **/.idea/workspace.xml
 **/.idea/tasks.xml
 **/.idea/*.iws
+**/.idea/*.iml
 *__jb_tmp__
-.idea/misc.xml
+**/.idea/misc.xml
