@@ -30,8 +30,17 @@ class DummyUI(Frame):
         self.start_btn["command"] = self.start_painting
         self.start_btn.pack({"side": "left"})
 
+    @staticmethod
+    def create_ui():
+        root = Tk()
+        ui = DummyUI(root)
+        root.protocol("WM_DELETE_WINDOW", ui.quit)
+        return ui
+
     def __init__(self, master=None):
         super().__init__(master)
+        self.root = master
+        self.running = False
         self.camera_display = self.quit_btn = self.capture_btn = self.proc_btn = self.start_btn = None
         self.pack()
         self.create_widgets()
@@ -67,6 +76,16 @@ class DummyUI(Frame):
         self.mech.activate()
         # Probably want to replace 'start' button with a 'stop' button here
 
+    def run(self):
+        self.running = True
+        self.after(0, self.tick)
+        self.root.mainloop()
+
+    def quit(self):
+        self.running = False
+        self.root.destroy()
+        super().quit()
+
     def tick(self):
         # Executes the real-time portion of the code
         # Measure elapsed time since last frame
@@ -84,4 +103,5 @@ class DummyUI(Frame):
         self.mech.tick(delta_time)
 
         # Runs as frequently as possible
-        self.after(0, self.tick)
+        if self.running:
+            self.after(0, self.tick)
