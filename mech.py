@@ -1,9 +1,12 @@
+import serial
+
 class MechControl(object):
     def __init__(self):
         # Runs once when the module is "created"
         self.moves = []
         self.active = False
-        self
+        self.ser = serial.Serial('COM4', 115200, timeout=0)
+
 
     def set_moves(self, moves):
         self.moves = moves
@@ -26,3 +29,17 @@ class MechControl(object):
         if self.active:
             # Send commands to the robot!
             print('Mech control update')
+
+    def send_grbl(self, command):
+        if command == 'quit':
+            self.ser.close()
+            break
+
+        self.ser.write(command.encode('ascii') + '\n')
+        time.sleep(0.5)
+
+        out = bytes([])
+        while self.ser.in_waiting > 0:
+            out += self.ser.read(1)
+
+        print(out.decode('ascii'))

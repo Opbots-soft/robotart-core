@@ -1,9 +1,6 @@
-import serial, time
+import time
 
 class Control(object):
-
-    def __init__(self):
-        self.ser = serial.Serial('COM4', 115200, timeout=0)
 
     def plan_moves(self, brush_strokes):
         # Return a list of moves for mechanical control to execute the provided brush strokes
@@ -64,20 +61,6 @@ class Control(object):
             t3 = 180/math.pi * 2 * math.atan((-F - (E1**2 + F**2 - G1**2)**0.5)/(G1 - E1))
 
         return t1, t2, t3
-
-    def send_grbl(self, command):
-        if command == 'quit':
-            self.ser.close()
-            break
-
-        self.ser.write(command.encode('ascii') + '\n')
-        time.sleep(0.5)
-
-        out = bytes([])
-        while self.ser.in_waiting > 0:
-            out += self.ser.read(1)
-
-        print(out.decode('ascii'))
 
 
 '''
