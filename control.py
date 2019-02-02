@@ -2,6 +2,23 @@ import time
 
 class Control(object):
 
+    def __init__(self, baseSideLength, baseLegLength, platLegLength, platSideLength):
+        rootThree = 3**0.5
+        self.SB = baseSideLength                # Sidelengths of base
+        self.LB = baseLegLength                 # Length of legs connected to base
+        self.LP = platLegLength                 # Length of legs connected to moving platform
+        self.SP = platSideLength                # Sidelengths of moving platform
+        self.wb = root_three/6 * self.SB
+        self.ub = self.SB / root_three
+        self.wp = root_three / 6 * self.SP
+        self.up = self.SP / root_three
+        self.a = self.wb - self.up
+        self.b = self.SP/2 - root_three/2 * self.wb
+        self.c = self.wp - self.wb/2
+        self.theta1 = 0
+        self.theta2 = 0
+        self.theta3 = 0
+
     def plan_moves(self, brush_strokes):
         # Return a list of moves for mechanical control to execute the provided brush strokes
         print('Control planning moves')
@@ -20,23 +37,9 @@ class Control(object):
 
         return data
 
-    def set_dimensions(self, baseSideLength, baseLegLength, platLegLength, platSideLength):
-        self.SB = baseSideLength                # Sidelengths of base
-        self.LB = baseLegLength                 # Length of legs connected to base
-        self.LP = platLegLength                 # Length of legs connected to moving platform
-        self.SP = platSideLength                # Sidelengths of moving platform
-        self.wb = root_three/6 * self.SB
-        self.ub = self.SB / root_three
-        self.wp = root_three / 6 * self.SP
-        self.up = self.SP / root_three
-        self.a = self.wb - self.up
-        self.b = self.SP/2 - root_three/2 * self.wb
-        self.c = self.wp - self.wb/2
-        self.theta1 = 0
-        self.theta2 = 0
-        self.theta3 = 0
-
     def calc_angles(self, x, y, z):
+        rootThree = 3**0.5
+        
         F = 2*z*self.LB
 
         E1 = 2*self.LB*(y + self.a)
