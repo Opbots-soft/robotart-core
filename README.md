@@ -10,9 +10,7 @@ Next you'll want to clone this repository to a spot on your computer where you w
 
 ## File Responsibilities
 
-imgproc.py:     (Image -> Image)
-
-imgabstract.py  (Image -> Abstraction)
+imgproc.py:     (Image -> Abstraction)
 
 control.py:     (Abstraction -> GCode
 
