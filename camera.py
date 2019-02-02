@@ -7,9 +7,6 @@ class Camera(object):
         self.cap = cv2.VideoCapture(0)
         self.latest_frame = None
 
-    def grab_image(self):
-        return self.latest_frame
-
     def grab_frame(self):
         ret, frame = self.cap.read()
         # convert to RGB
