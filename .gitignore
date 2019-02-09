@@ -107,3 +107,5 @@ ENV/
 **/.idea/*.iml
 *__jb_tmp__
 **/.idea/misc.xml
+
+.vscode
