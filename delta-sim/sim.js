@@ -3,21 +3,21 @@ var PI = 3.14159;
 var THICKNESS = 0.06;
 
 // Objects
-var scene, camera, renderer, controls;
+var scene, camera, renderer, controls, drag;
 var basePlat, baseLegs = [],
     upperPlat, upperLegs = [];
 
 // Parameters
 var basePlatLen = 1,
     baseLegLen = 1,
-    upperPlatLen = 0.7,
+    upperPlatLen = 0.5,
     upperLegLen = 1,
-    baseAngles = [0, 0, 0];
+    baseAngles = [PI/3, PI/3, PI/3];
 
 function setupScene() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 1;
+    camera.position.z = 3;
 
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight - 5);
@@ -63,7 +63,12 @@ function setupRobot() {
     upperPlatGeo.rotateX(PI);
     upperPlatGeo.translate(0, 0, THICKNESS / 2);
     upperPlat = new THREE.Mesh(upperPlatGeo, purpleMat);
+    upperPlat.position.z = 1.8;
     scene.add(upperPlat);
+
+    drag = new THREE.DragControls([upperPlat], camera, renderer.domElement);
+    drag.addEventListener('dragstart', () => { controls.enabled = false; });
+    drag.addEventListener('dragend', () => { controls.enabled = true; });
 
     var baseLegGeo = new THREE.BoxBufferGeometry(THICKNESS, 1, THICKNESS);
     baseLegGeo.translate(0, 0.5, -THICKNESS / 2);
@@ -77,9 +82,9 @@ function setupRobot() {
         baseLegs[i].position.z = THICKNESS / 2;
         scene.add(baseLegs[i]);
         upperLegs.push(new THREE.Mesh(upperLegGeo, blueMat));
-        upperLegs[i].cont = new THREE.Group();
-        upperLegs[i].cont.add(upperLegs[i]);
-        baseLegs[i].add(upperLegs[i].cont);
+        upperLegs[i].container = new THREE.Group();
+        upperLegs[i].container.add(upperLegs[i]);
+        baseLegs[i].add(upperLegs[i].container);
     }
 }
 
@@ -111,10 +116,20 @@ function updateRobot() {
 
     for (var i = 0; i < 3; i++) {
         baseLegs[i].scale.y = baseLegLen;
-        upperLegs[i].cont.scale.y = 1 / baseLegLen;
+        upperLegs[i].container.scale.y = 1 / baseLegLen;
         upperLegs[i].position.y = baseLegLen;
         upperLegs[i].scale.z = upperLegLen;
     }
+
+    upperLegs[0].lookAt(upperPlat.position.x,
+                        upperPlat.position.y + 0.5774 * upperPlatLen,
+                        upperPlat.position.z);
+    upperLegs[1].lookAt(upperPlat.position.x  + 0.5 * upperPlatLen,
+                        upperPlat.position.y - 0.2887 * upperPlatLen,
+                        upperPlat.position.z);
+    upperLegs[2].lookAt(upperPlat.position.x - 0.5 * upperPlatLen,
+                        upperPlat.position.y - 0.2887 * upperPlatLen,
+                        upperPlat.position.z);
 }
 
 setupScene();

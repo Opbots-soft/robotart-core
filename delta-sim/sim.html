@@ -1,32 +1,32 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset=utf-8>
-		<title>Delta Robot Simulation</title>
-		<style>
-			body { margin: 0; }
-			#popover {
-				position: absolute;
-				height: 100px;
-				width: fit-content;
-				top: 20px;
-				right: 20px;
-			}
-			label { vertical-align: top; }
-		</style>
-	</head>
-	<body>
-		<script src="https://raw.githack.com/mrdoob/three.js/dev/build/three.min.js"></script>
-		<script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/controls/OrbitControls.js"></script>
-		<script src="https://raw.githack.com/mrdoob/three.js/master/examples/js/controls/DragControls.js"></script>
-		<script src="js/sim.js"></script>
-		<div id="popover">
-			<div> <label>Angle 1</label>
-			<input type="range" id="start" min="0" max="90"> </div>
-			<div> <label>Angle 2</label>
-			<input type="range" id="start" min="0" max="90"> </div>
-			<div> <label>Angle 3</label>
-			<input type="range" id="start" min="0" max="90"> </div>
-		</div>
-	</body>
+    <head>
+        <meta charset=utf-8>
+        <title>Delta Robot Simulation</title>
+        <style>
+            body { margin: 0; }
+            #popover {
+                position: absolute;
+                height: 100px;
+                width: fit-content;
+                top: 20px;
+                right: 20px;
+            }
+            label { vertical-align: top; }
+        </style>
+    </head>
+    <body>
+        <script src="https://raw.githack.com/mrdoob/three.js/dev/build/three.min.js"></script>
+        <script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/controls/OrbitControls.js"></script>
+        <script src="https://raw.githack.com/mrdoob/three.js/master/examples/js/controls/DragControls.js"></script>
+        <script src="sim.js"></script>
+        <div id="popover">
+            <div> <label>Angle 1</label>
+            <input type="range" id="start" min="0" max="90"> </div>
+            <div> <label>Angle 2</label>
+            <input type="range" id="start" min="0" max="90"> </div>
+            <div> <label>Angle 3</label>
+            <input type="range" id="start" min="0" max="90"> </div>
+        </div>
+    </body>
 </html>
