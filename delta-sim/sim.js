@@ -1,6 +1,8 @@
 // Constants
 var PI = 3.14159;
 var THICKNESS = 0.06;
+var CIRCUM_RADIUS = 0.5774;
+var INSCRIBED_RADIUS = 0.2887;
 
 // Objects
 var scene, camera, renderer, controls, drag;
@@ -12,7 +14,7 @@ var basePlatLen = 1,
     baseLegLen = 1,
     upperPlatLen = 0.5,
     upperLegLen = 1,
-    baseAngles = [PI/3, PI/3, PI/3];
+    baseAngles = [];
 
 function setupScene() {
     scene = new THREE.Scene();
@@ -42,9 +44,9 @@ function setupRobot() {
 
     var triangle = new THREE.Shape();
     triangle.setFromPoints([
-        new THREE.Vector2(-0.5, 0.2887),
-        new THREE.Vector2(0.5, 0.2887),
-        new THREE.Vector2(0, -0.5774)
+        new THREE.Vector2(-0.5, INSCRIBED_RADIUS),
+        new THREE.Vector2(0.5, INSCRIBED_RADIUS),
+        new THREE.Vector2(0, -CIRCUM_RADIUS)
     ]);
     var basePlatGeo = new THREE.ExtrudeBufferGeometry(triangle, {
         steps: 1,
@@ -62,7 +64,7 @@ function setupRobot() {
     });
     upperPlatGeo.rotateX(PI);
     upperPlatGeo.translate(0, 0, THICKNESS / 2);
-    upperPlat = new THREE.Mesh(upperPlatGeo, purpleMat);
+    upperPlat = new THREE.Mesh(upperPlatGeo, redMat);
     upperPlat.position.z = 1.8;
     scene.add(upperPlat);
 
@@ -86,6 +88,9 @@ function setupRobot() {
         upperLegs[i].container.add(upperLegs[i]);
         baseLegs[i].add(upperLegs[i].container);
     }
+    baseAngles.push(new THREE.Euler(0, 0, 0, 'ZYX'));
+    baseAngles.push(new THREE.Euler(0, 0, -2 * PI / 3, 'ZYX'));
+    baseAngles.push(new THREE.Euler(0, 0, 2 * PI / 3, 'ZYX'));
 }
 
 function animate() {
@@ -96,17 +101,13 @@ function animate() {
 }
 
 function updateRobot() {
-    baseLegs[0].setRotationFromEuler(new THREE.Euler(baseAngles[0], 0, 0, 'ZYX'));
-    baseLegs[1].setRotationFromEuler(new THREE.Euler(baseAngles[1], 0, -2 * PI / 3, 'ZYX'));
-    baseLegs[2].setRotationFromEuler(new THREE.Euler(baseAngles[2], 0, 2 * PI / 3, 'ZYX'));
-
     upperPlat.scale.x = upperPlatLen;
     upperPlat.scale.y = upperPlatLen;
 
     basePlat.scale.x = basePlatLen;
     basePlat.scale.y = basePlatLen;
 
-    baseLegs[0].position.y = 0.2887 * basePlatLen;
+    baseLegs[0].position.y = INSCRIBED_RADIUS * basePlatLen;
 
     baseLegs[1].position.x = 0.25 * basePlatLen;
     baseLegs[1].position.y = -0.1443 * basePlatLen;
@@ -122,14 +123,54 @@ function updateRobot() {
     }
 
     upperLegs[0].lookAt(upperPlat.position.x,
-                        upperPlat.position.y + 0.5774 * upperPlatLen,
+                        upperPlat.position.y + CIRCUM_RADIUS * upperPlatLen,
                         upperPlat.position.z);
-    upperLegs[1].lookAt(upperPlat.position.x  + 0.5 * upperPlatLen,
-                        upperPlat.position.y - 0.2887 * upperPlatLen,
+    upperLegs[1].lookAt(upperPlat.position.x + 0.5 * upperPlatLen,
+                        upperPlat.position.y - INSCRIBED_RADIUS * upperPlatLen,
                         upperPlat.position.z);
     upperLegs[2].lookAt(upperPlat.position.x - 0.5 * upperPlatLen,
-                        upperPlat.position.y - 0.2887 * upperPlatLen,
+                        upperPlat.position.y - INSCRIBED_RADIUS * upperPlatLen,
                         upperPlat.position.z);
+
+    //calculateBaseAngles();
+    for (var i = 0; i < 3; i++)
+        baseLegs[i].quaternion.setFromEuler(baseAngles[i]);
+}
+
+function calculateBaseAngles() {
+    /* https://gamedev.stackexchange.com/questions/75756/sphere-sphere-intersection-and-circle-sphere-intersection
+     *
+     * centerC = center of circle swept by base leg
+     * centerS = center of sphere swept by upper leg about upper platform corner
+     * normal = normal of plane which circle swept by base leg lies on
+     * radiusP = 
+     */
+
+    for (var i = 0; i < 3; i++) {
+        var centerC = baseLegs[i].position.clone();
+        var centerS = upperPlat.position.clone(), normal;
+        if (i == 0) {
+            centerS.y += CIRCUM_RADIUS * upperPlatLen;
+            normal = new THREE.Vector3(1, 0, 0);
+        } else if (i == 1) {
+            centerS.x += 0.5 * upperPlatLen;
+            centerS.y -= INSCRIBED_RADIUS * upperPlatLen;
+            normal = new THREE.Vector3(-INSCRIBED_RADIUS, -0.5, 0);
+        } else if (i == 2) {
+            centerS.x -= 0.5 * upperPlatLen;
+            centerS.y -= INSCRIBED_RADIUS * upperPlatLen;
+            normal = new THREE.Vector3(-INSCRIBED_RADIUS, 0.5, 0);
+        }
+        normal.normalize();
+
+        var radiusP = normal.dot(centerC.clone().sub(centerS));
+        var centerP = normal.clone().multiplyScalar(radiusP).add(centerS);
+        var d2 = centerC.distanceToSquared(centerP);
+        var h = 0.5 + (baseLegLen * baseLegLen - upperLegLen * upperLegLen) / (2 * d2);
+        var radiusI = Math.sqrt(baseLegLen * baseLegLen - h * h * d2);
+        //c_i = c_1 + h * (c_2 - c_1)
+        var centerI = centerC.clone().add(centerS.clone().sub(centerC).multiplyScalar(h));
+    }
 }
 
 setupScene();
