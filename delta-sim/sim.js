@@ -1,19 +1,21 @@
 // Constants
 var PI = 3.14159;
-var THICKNESS = 0.06;
+var THICKNESS = 0.1;
 var CIRCUM_RADIUS = 0.5774;
 var INSCRIBED_RADIUS = 0.2887;
+var UPPERPLAT_START_POS = 1.5;
+var AUTO_UPDATE_MATRIX = false;
 
 // Objects
 var scene, camera, renderer, controls, drag;
-var basePlat, baseLegs = [],
+var basePlat, baseLegs = [], joints = [],
     upperPlat, upperLegs = [];
 
 // Parameters
-var basePlatLen = 1,
-    baseLegLen = 1,
-    upperPlatLen = 0.5,
-    upperLegLen = 1,
+var basePlatLen = 3,
+    baseLegLen = 3,
+    upperPlatLen = 1.5,
+    upperLegLen = 3,
     baseAngles = [];
 
 function setupScene() {
@@ -35,6 +37,8 @@ function setupScene() {
     directionalLight.position.set(-1, -1, 1).normalize();
     scene.add(directionalLight);
     scene.background = new THREE.Color(0xffffff);
+
+    THREE.Object3D.DefaultMatrixAutoUpdate = AUTO_UPDATE_MATRIX;
 }
 
 function setupRobot() {
@@ -65,7 +69,7 @@ function setupRobot() {
     upperPlatGeo.rotateX(PI);
     upperPlatGeo.translate(0, 0, THICKNESS / 2);
     upperPlat = new THREE.Mesh(upperPlatGeo, redMat);
-    upperPlat.position.z = 1.8;
+    upperPlat.position.z = UPPERPLAT_START_POS;
     scene.add(upperPlat);
 
     drag = new THREE.DragControls([upperPlat], camera, renderer.domElement);
@@ -91,11 +95,17 @@ function setupRobot() {
     baseAngles.push(new THREE.Euler(0, 0, 0, 'ZYX'));
     baseAngles.push(new THREE.Euler(0, 0, -2 * PI / 3, 'ZYX'));
     baseAngles.push(new THREE.Euler(0, 0, 2 * PI / 3, 'ZYX'));
+
+    var jointGeometry = new THREE.SphereBufferGeometry(THICKNESS, 16, 16);
+    for (var i = 0; i < 3; i++) {
+        joints.push(new THREE.Mesh(jointGeometry, purpleMat));
+        scene.add(joints[i]);
+    }
 }
 
 function animate() {
     requestAnimationFrame(animate);
-    updateRobot()
+    updateRobot();
     controls.update();
     renderer.render(scene, camera);
 }
@@ -107,13 +117,16 @@ function updateRobot() {
     basePlat.scale.x = basePlatLen;
     basePlat.scale.y = basePlatLen;
 
+    upperPlat.updateMatrix();
+    basePlat.updateMatrix();
+
     baseLegs[0].position.y = INSCRIBED_RADIUS * basePlatLen;
 
     baseLegs[1].position.x = 0.25 * basePlatLen;
-    baseLegs[1].position.y = -0.1443 * basePlatLen;
+    baseLegs[1].position.y = (INSCRIBED_RADIUS - CIRCUM_RADIUS)/2 * basePlatLen;
 
     baseLegs[2].position.x = -0.25 * basePlatLen;
-    baseLegs[2].position.y = -0.1443 * basePlatLen;
+    baseLegs[2].position.y = (INSCRIBED_RADIUS - CIRCUM_RADIUS)/2 * basePlatLen;
 
     for (var i = 0; i < 3; i++) {
         baseLegs[i].scale.y = baseLegLen;
@@ -122,54 +135,68 @@ function updateRobot() {
         upperLegs[i].scale.z = upperLegLen;
     }
 
-    upperLegs[0].lookAt(upperPlat.position.x,
-                        upperPlat.position.y + CIRCUM_RADIUS * upperPlatLen,
-                        upperPlat.position.z);
-    upperLegs[1].lookAt(upperPlat.position.x + 0.5 * upperPlatLen,
-                        upperPlat.position.y - INSCRIBED_RADIUS * upperPlatLen,
-                        upperPlat.position.z);
-    upperLegs[2].lookAt(upperPlat.position.x - 0.5 * upperPlatLen,
-                        upperPlat.position.y - INSCRIBED_RADIUS * upperPlatLen,
-                        upperPlat.position.z);
-
-    //calculateBaseAngles();
-    for (var i = 0; i < 3; i++)
+    calculateBaseAngles();
+    for (var i = 0; i < 3; i++) {
         baseLegs[i].quaternion.setFromEuler(baseAngles[i]);
+        baseLegs[i].updateMatrix();
+        upperLegs[i].container.updateMatrix();
+    }
+
+    upperLegs[0].lookAt(upperPlat.position.x,
+                upperPlat.position.y + CIRCUM_RADIUS * upperPlatLen,
+                upperPlat.position.z);
+    upperLegs[1].lookAt(upperPlat.position.x + 0.5 * upperPlatLen,
+                upperPlat.position.y - INSCRIBED_RADIUS * upperPlatLen,
+                upperPlat.position.z);
+    upperLegs[2].lookAt(upperPlat.position.x - 0.5 * upperPlatLen,
+                upperPlat.position.y - INSCRIBED_RADIUS * upperPlatLen,
+                upperPlat.position.z);
+
+    for (var i = 0; i < 3; i++) {
+        upperLegs[i].updateMatrix();
+        joints[i].updateMatrix();
+    }
 }
 
 function calculateBaseAngles() {
     /* https://gamedev.stackexchange.com/questions/75756/sphere-sphere-intersection-and-circle-sphere-intersection
-     *
      * centerC = center of circle swept by base leg
      * centerS = center of sphere swept by upper leg about upper platform corner
      * normal = normal of plane which circle swept by base leg lies on
      * radiusP = 
      */
-
+    var origin = new THREE.Vector3(0, 0, THICKNESS/2);
     for (var i = 0; i < 3; i++) {
         var centerC = baseLegs[i].position.clone();
-        var centerS = upperPlat.position.clone(), normal;
-        if (i == 0) {
-            centerS.y += CIRCUM_RADIUS * upperPlatLen;
-            normal = new THREE.Vector3(1, 0, 0);
-        } else if (i == 1) {
-            centerS.x += 0.5 * upperPlatLen;
-            centerS.y -= INSCRIBED_RADIUS * upperPlatLen;
-            normal = new THREE.Vector3(-INSCRIBED_RADIUS, -0.5, 0);
-        } else if (i == 2) {
-            centerS.x -= 0.5 * upperPlatLen;
-            centerS.y -= INSCRIBED_RADIUS * upperPlatLen;
-            normal = new THREE.Vector3(-INSCRIBED_RADIUS, 0.5, 0);
-        }
-        normal.normalize();
+        var centerS = upperPlat.position.clone();
+        centerS.x += i > 0 ? (1.5 - i) * upperPlatLen : 0;
+        centerS.y += i ? -INSCRIBED_RADIUS * upperPlatLen : CIRCUM_RADIUS * upperPlatLen;
+        var normal = new THREE.Vector3(-baseLegs[i].position.y, baseLegs[i].position.x, 0).normalize();
 
-        var radiusP = normal.dot(centerC.clone().sub(centerS));
-        var centerP = normal.clone().multiplyScalar(radiusP).add(centerS);
-        var d2 = centerC.distanceToSquared(centerP);
-        var h = 0.5 + (baseLegLen * baseLegLen - upperLegLen * upperLegLen) / (2 * d2);
+        // d = dot(n, c_c - c_s)
+        // c_p = c_s + d*n
+        // r_p = sqrt(r_s*r_s - d*d)
+        var d = normal.dot(centerC.clone().sub(centerS));
+        if (Math.abs(d) > upperLegLen) continue;
+        var centerP = centerS.clone().add(normal.clone().multiplyScalar(d));
+        var radiusP = Math.sqrt(upperLegLen * upperLegLen - d*d);
+
+        // h = 1/2 + (r_1 * r_1 - r_2 * r_2)/(2 * d*d)
+        // r_i = sqrt(r_1*r_1 - h*h*d*d)
+        // c_i = c_1 + h * (c_2 - c_1)
+        var d2 = centerP.distanceToSquared(centerC);
+        var h = 0.5 + (baseLegLen * baseLegLen - radiusP * radiusP)/(2 * d2);
         var radiusI = Math.sqrt(baseLegLen * baseLegLen - h * h * d2);
-        //c_i = c_1 + h * (c_2 - c_1)
-        var centerI = centerC.clone().add(centerS.clone().sub(centerC).multiplyScalar(h));
+        var centerI =  centerC.clone().addScaledVector(centerP.clone().sub(centerC), h);
+
+        // t = normalize(cross(c_p - c_c, n))
+        // p_0 = c_i - t * r_i
+        // p_1 = c_i + t * r_i
+        var tangent = centerP.clone().sub(centerC).cross(normal).normalize();
+        var point0 = centerI.clone().addScaledVector(tangent, -radiusI);
+
+        joints[i].position.copy(point0);
+        baseAngles[i].x = PI - point0.clone().sub(centerC).angleTo(origin.clone().sub(centerC));
     }
 }
 
