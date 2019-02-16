@@ -12,10 +12,10 @@ var basePlat, baseLegs = [], joints = [],
     upperPlat, upperLegs = [];
 
 // Parameters
-var basePlatLen = 3,
-    baseLegLen = 3,
-    upperPlatLen = 1.5,
-    upperLegLen = 3,
+var basePlatLen = 2,
+    baseLegLen = 2,
+    upperPlatLen = 1,
+    upperLegLen = 2,
     baseAngles = [];
 
 function setupScene() {
@@ -24,6 +24,8 @@ function setupScene() {
     camera.position.z = 3;
 
     renderer = new THREE.WebGLRenderer();
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setSize(window.innerWidth, window.innerHeight - 5);
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     document.body.appendChild(renderer.domElement);
@@ -31,12 +33,23 @@ function setupScene() {
     var ambientLight = new THREE.AmbientLight(0xcccccc);
     scene.add(ambientLight);
     var directionalLight = new THREE.DirectionalLight(0xbbbbbb, 1);
-    directionalLight.position.set(1, 1, 1).normalize();
-    scene.add(directionalLight);
-    directionalLight = new THREE.DirectionalLight(0xbbbbbb, 1);
-    directionalLight.position.set(-1, -1, 1).normalize();
+    directionalLight.position.set(0, 5, -1);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 1000;
+    directionalLight.shadow.mapSize.height = 1000;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 500;
     scene.add(directionalLight);
     scene.background = new THREE.Color(0xffffff);
+
+    var planeGeometry = new THREE.PlaneBufferGeometry( 100, 100, 1, 1 );
+    var planeMaterial = new THREE.MeshLambertMaterial( { color: 0x777777 } )
+    var plane = new THREE.Mesh( planeGeometry, planeMaterial );
+    plane.position.copy(new THREE.Vector3(0, -CIRCUM_RADIUS * basePlatLen - 0.5, 0));
+    plane.quaternion.setFromEuler(new THREE.Euler(-PI/2, 0, 0));
+    plane.updateMatrix();
+    plane.receiveShadow = true;
+    scene.add( plane );
 
     THREE.Object3D.DefaultMatrixAutoUpdate = AUTO_UPDATE_MATRIX;
 }
@@ -101,6 +114,17 @@ function setupRobot() {
         joints.push(new THREE.Mesh(jointGeometry, purpleMat));
         scene.add(joints[i]);
     }
+
+    upperPlat.castShadow = true;
+    upperPlat.receiveShadow = false;
+    basePlat.castShadow = true;
+    basePlat.receiveShadow = false;
+    for (var i = 0; i < 3; i++) {
+        baseLegs[i].castShadow = true;
+        baseLegs[i].receiveShadow = false;
+        upperLegs[i].castShadow = true;
+        upperLegs[i].receiveShadow = false;
+    }
 }
 
 function animate() {
@@ -163,7 +187,12 @@ function calculateBaseAngles() {
      * centerC = center of circle swept by base leg
      * centerS = center of sphere swept by upper leg about upper platform corner
      * normal = normal of plane which circle swept by base leg lies on
-     * radiusP = 
+     * radiusP = radius of circle cut by plane through sphere
+     * centerP = center of circle cut by plane through sphere
+     * radiusI = half of the distance between the two intersection points
+     * centerI = midpoint between the two intersection points
+     * tangent = cross product of normal and vector from center of circle to center of circle cut by plane
+     * point0 = intersection point with leg joint "kinked out"
      */
     var origin = new THREE.Vector3(0, 0, THICKNESS/2);
     for (var i = 0; i < 3; i++) {
