@@ -9,7 +9,7 @@ var AUTO_UPDATE_MATRIX = false;
 // Objects
 var scene, camera, renderer, controls, drag;
 var basePlat, baseLegs = [], joints = [],
-    upperPlat, upperLegs = [];
+    upperPlat, upperLegs = [], sliders = [];
 
 // Parameters
 var basePlatLen = 2,
@@ -51,6 +51,12 @@ function setupScene() {
     plane.receiveShadow = true;
     scene.add( plane );
 
+    sliders.push(document.getElementById('angle1'));
+    sliders.push(document.getElementById('angle2'));
+    sliders.push(document.getElementById('angle3'));
+    for (var i = 0; i < 3; i++)
+        sliders[i].addEventListener('input', handleSlider);
+
     THREE.Object3D.DefaultMatrixAutoUpdate = AUTO_UPDATE_MATRIX;
 }
 
@@ -86,8 +92,9 @@ function setupRobot() {
     scene.add(upperPlat);
 
     drag = new THREE.DragControls([upperPlat], camera, renderer.domElement);
-    drag.addEventListener('dragstart', () => { controls.enabled = false; });
-    drag.addEventListener('dragend', () => { controls.enabled = true; });
+    drag.addEventListener('dragstart', handleDragStart);
+    drag.addEventListener('dragend', handleDragEnd);
+    drag.addEventListener('drag', handleDrag);
 
     var baseLegGeo = new THREE.BoxBufferGeometry(THICKNESS, 1, THICKNESS);
     baseLegGeo.translate(0, 0.5, -THICKNESS / 2);
@@ -159,7 +166,6 @@ function updateRobot() {
         upperLegs[i].scale.z = upperLegLen;
     }
 
-    calculateBaseAngles();
     for (var i = 0; i < 3; i++) {
         baseLegs[i].quaternion.setFromEuler(baseAngles[i]);
         baseLegs[i].updateMatrix();
@@ -226,7 +232,39 @@ function calculateBaseAngles() {
 
         joints[i].position.copy(point0);
         baseAngles[i].x = PI - point0.clone().sub(centerC).angleTo(origin.clone().sub(centerC));
+        if (joints[i].position.z < 0)
+            baseAngles[i].x *= -1;
     }
+}
+
+function calculatePlatPosition() {
+
+}
+
+function handleDragStart() {
+    controls.enabled = false;
+}
+
+function handleDragEnd() {
+    controls.enabled = true;
+}
+
+function handleDrag() {
+    calculateBaseAngles();
+    for (var i = 0; i < 3; i++)
+        sliders[i].value = baseAngles[i].x * 180/PI;
+}
+
+function handleSlider(e) {
+    var angle = e.target.value * PI/180;
+    if (e.target.id == 'angle1')
+        baseAngles[0].x = angle;
+    else if (e.target.id == 'angle2')
+        baseAngles[1].x = angle;
+    else
+        baseAngles[2].x = angle;
+
+    calculatePlatPosition();
 }
 
 setupScene();
