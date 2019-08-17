@@ -12,11 +12,19 @@ var basePlat, baseLegs = [], joints = [],
     upperPlat, upperLegs = [], sliders = [];
 
 // Parameters
-var basePlatLen = 2,
-    baseLegLen = 2,
-    upperPlatLen = 1,
-    upperLegLen = 2,
+var basePlatLen = 3,
+    baseLegLen = 3,
+    upperPlatLen = 0.75,
+    upperLegLen = 2.74,
     baseAngles = [];
+var t = 0, dt = 0.5;
+
+/* 
+ * 300 mm = basePlatLen
+ * 300 mm = baseLegLen
+ * 75 mm = upperPlatLen
+ * 274 mm = upperLegLen
+ */
 
 function setupScene() {
     scene = new THREE.Scene();
@@ -136,9 +144,18 @@ function setupRobot() {
 
 function animate() {
     requestAnimationFrame(animate);
+
+    updateEffector();
     updateRobot();
+
     controls.update();
     renderer.render(scene, camera);
+    t += dt;
+}
+
+function updateEffector() {
+    upperPlat.position.z = 0.5 * Math.cos(t) + 4;
+    upperPlat.position.x = 0.5 * Math.sin(t);
 }
 
 function updateRobot() {
@@ -270,3 +287,4 @@ function handleSlider(e) {
 setupScene();
 setupRobot();
 animate();
+upperPlat.position.y = -CIRCUM_RADIUS * 0.5 * basePlatLen;
