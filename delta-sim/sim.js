@@ -210,6 +210,32 @@ function updateRobot() {
     }
 }
 
+function handleDragStart() {
+    controls.enabled = false;
+}
+
+function handleDragEnd() {
+    controls.enabled = true;
+}
+
+function handleDrag() {
+    calculateBaseAngles();
+    for (var i = 0; i < 3; i++)
+        sliders[i].value = baseAngles[i].x * 180/PI;
+}
+
+function handleSlider(e) {
+    var angle = e.target.value * PI/180;
+    if (e.target.id == 'angle1')
+        baseAngles[0].x = angle;
+    else if (e.target.id == 'angle2')
+        baseAngles[1].x = angle;
+    else
+        baseAngles[2].x = angle;
+
+    calculatePlatPosition();
+}
+
 function calculateBaseAngles() {
     for (var i = 0; i < 3; i++) {
         var centerC = baseLegs[i].position.clone();
@@ -247,33 +273,9 @@ function calculatePlatPosition() {
         upperLegs[i].getWorldPosition(joints[i].position);
 }
 
-function handleDragStart() {
-    controls.enabled = false;
-}
-
-function handleDragEnd() {
-    controls.enabled = true;
-}
-
-function handleDrag() {
-    calculateBaseAngles();
-    for (var i = 0; i < 3; i++)
-        sliders[i].value = baseAngles[i].x * 180/PI;
-}
-
-function handleSlider(e) {
-    var angle = e.target.value * PI/180;
-    if (e.target.id == 'angle1')
-        baseAngles[0].x = angle;
-    else if (e.target.id == 'angle2')
-        baseAngles[1].x = angle;
-    else
-        baseAngles[2].x = angle;
-
-    calculatePlatPosition();
-}
-
 setupScene();
 setupRobot();
 animate();
+
 upperPlat.position.y = -CIRCUM_RADIUS * 0.5 * basePlatLen;
+calculateBaseAngles();
