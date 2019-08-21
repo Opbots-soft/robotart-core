@@ -228,7 +228,23 @@ function calculateBaseAngles() {
 }
 
 function calculatePlatPosition() {
+    updateRobot();
 
+    var c0 = upperLegs[0].getWorldPosition(new THREE.Vector3());
+    c0.y += -CIRCUM_RADIUS * upperPlatLen;
+    var c1 = upperLegs[1].getWorldPosition(new THREE.Vector3());
+    c1.x += -0.5 * upperPlatLen;
+    c1.y += INSCRIBED_RADIUS * upperPlatLen;
+    var c2 = upperLegs[2].getWorldPosition(new THREE.Vector3());
+    c2.x += 0.5 * upperPlatLen;
+    c2.y += INSCRIBED_RADIUS * upperPlatLen;
+
+    var [center, normal, radius] = sphere_sphere(c0, upperLegLen, c1, upperLegLen);
+    var [p0, p1] = sphere_circle(c2, upperLegLen, center, normal, radius);
+
+    upperPlat.position.copy(p1);
+    for (var i = 0; i < 3; i++)
+        upperLegs[i].getWorldPosition(joints[i].position);
 }
 
 function handleDragStart() {
