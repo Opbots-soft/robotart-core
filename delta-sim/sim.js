@@ -1,15 +1,18 @@
 // Constants
 var PI = 3.14159;
-var THICKNESS = 0.1;
+var DT = 0.5;
+var THICKNESS = 0.3;
 var CIRCUM_RADIUS = 0.5774;
 var INSCRIBED_RADIUS = 0.2887;
 var UPPERPLAT_START_POS = 1.5;
 var AUTO_UPDATE_MATRIX = false;
+var ORIGIN = new THREE.Vector3(0, 0, 0);
 
 // Objects
 var scene, camera, renderer, controls, drag;
 var basePlat, baseLegs = [], joints = [],
-    upperPlat, upperLegs = [], sliders = [];
+    upperPlat, upperLegs = [];
+var sliders = [];
 
 // Parameters
 var basePlatLen = 3,
@@ -17,7 +20,7 @@ var basePlatLen = 3,
     upperPlatLen = 0.75,
     upperLegLen = 2.74,
     baseAngles = [];
-var t = 0, dt = 0.5;
+var t = 0;
 
 /* 
  * 300 mm = basePlatLen
@@ -58,6 +61,9 @@ function setupScene() {
     plane.updateMatrix();
     plane.receiveShadow = true;
     scene.add( plane );
+
+    var axesHelper = new THREE.AxesHelper( 5 );
+    scene.add( axesHelper );
 
     sliders.push(document.getElementById('angle1'));
     sliders.push(document.getElementById('angle2'));
@@ -104,8 +110,8 @@ function setupRobot() {
     drag.addEventListener('dragend', handleDragEnd);
     drag.addEventListener('drag', handleDrag);
 
-    var baseLegGeo = new THREE.BoxBufferGeometry(THICKNESS, 1, THICKNESS);
-    baseLegGeo.translate(0, 0.5, -THICKNESS / 2);
+    var baseLegGeo = new THREE.CylinderBufferGeometry(THICKNESS / 2, THICKNESS / 2, 1, 8);
+    baseLegGeo.translate(0, 0.5, 0);
 
     var upperLegGeo = new THREE.CylinderBufferGeometry(THICKNESS / 2, THICKNESS / 2, 1, 8);
     upperLegGeo.translate(0, 0.5, 0);
@@ -113,7 +119,6 @@ function setupRobot() {
 
     for (var i = 0; i < 3; i++) {
         baseLegs.push(new THREE.Mesh(baseLegGeo, redMat));
-        baseLegs[i].position.z = THICKNESS / 2;
         scene.add(baseLegs[i]);
         upperLegs.push(new THREE.Mesh(upperLegGeo, blueMat));
         upperLegs[i].container = new THREE.Group();
@@ -124,7 +129,7 @@ function setupRobot() {
     baseAngles.push(new THREE.Euler(0, 0, -2 * PI / 3, 'ZYX'));
     baseAngles.push(new THREE.Euler(0, 0, 2 * PI / 3, 'ZYX'));
 
-    var jointGeometry = new THREE.SphereBufferGeometry(THICKNESS, 16, 16);
+    var jointGeometry = new THREE.SphereBufferGeometry(THICKNESS/2, 16, 16);
     for (var i = 0; i < 3; i++) {
         joints.push(new THREE.Mesh(jointGeometry, purpleMat));
         scene.add(joints[i]);
@@ -145,17 +150,17 @@ function setupRobot() {
 function animate() {
     requestAnimationFrame(animate);
 
-    updateEffector();
+    //updateEffector();
     updateRobot();
 
     controls.update();
     renderer.render(scene, camera);
-    t += dt;
 }
 
 function updateEffector() {
     upperPlat.position.z = 0.5 * Math.cos(t) + 4;
     upperPlat.position.x = 0.5 * Math.sin(t);
+    t += DT;
 }
 
 function updateRobot() {
@@ -206,18 +211,6 @@ function updateRobot() {
 }
 
 function calculateBaseAngles() {
-    /* https://gamedev.stackexchange.com/questions/75756/sphere-sphere-intersection-and-circle-sphere-intersection
-     * centerC = center of circle swept by base leg
-     * centerS = center of sphere swept by upper leg about upper platform corner
-     * normal = normal of plane which circle swept by base leg lies on
-     * radiusP = radius of circle cut by plane through sphere
-     * centerP = center of circle cut by plane through sphere
-     * radiusI = half of the distance between the two intersection points
-     * centerI = midpoint between the two intersection points
-     * tangent = cross product of normal and vector from center of circle to center of circle cut by plane
-     * point0 = intersection point with leg joint "kinked out"
-     */
-    var origin = new THREE.Vector3(0, 0, THICKNESS/2);
     for (var i = 0; i < 3; i++) {
         var centerC = baseLegs[i].position.clone();
         var centerS = upperPlat.position.clone();
@@ -225,30 +218,10 @@ function calculateBaseAngles() {
         centerS.y += i ? -INSCRIBED_RADIUS * upperPlatLen : CIRCUM_RADIUS * upperPlatLen;
         var normal = new THREE.Vector3(-baseLegs[i].position.y, baseLegs[i].position.x, 0).normalize();
 
-        // d = dot(n, c_c - c_s)
-        // c_p = c_s + d*n
-        // r_p = sqrt(r_s*r_s - d*d)
-        var d = normal.dot(centerC.clone().sub(centerS));
-        if (Math.abs(d) > upperLegLen) continue;
-        var centerP = centerS.clone().add(normal.clone().multiplyScalar(d));
-        var radiusP = Math.sqrt(upperLegLen * upperLegLen - d*d);
+        var [p0, p1] = sphere_circle(centerS, upperLegLen, centerC, normal, baseLegLen);
 
-        // h = 1/2 + (r_1 * r_1 - r_2 * r_2)/(2 * d*d)
-        // r_i = sqrt(r_1*r_1 - h*h*d*d)
-        // c_i = c_1 + h * (c_2 - c_1)
-        var d2 = centerP.distanceToSquared(centerC);
-        var h = 0.5 + (baseLegLen * baseLegLen - radiusP * radiusP)/(2 * d2);
-        var radiusI = Math.sqrt(baseLegLen * baseLegLen - h * h * d2);
-        var centerI =  centerC.clone().addScaledVector(centerP.clone().sub(centerC), h);
-
-        // t = normalize(cross(c_p - c_c, n))
-        // p_0 = c_i - t * r_i
-        // p_1 = c_i + t * r_i
-        var tangent = centerP.clone().sub(centerC).cross(normal).normalize();
-        var point0 = centerI.clone().addScaledVector(tangent, -radiusI);
-
-        joints[i].position.copy(point0);
-        baseAngles[i].x = PI - point0.clone().sub(centerC).angleTo(origin.clone().sub(centerC));
+        joints[i].position.copy(p1);
+        baseAngles[i].x = PI - p1.clone().sub(centerC).angleTo(ORIGIN.clone().sub(centerC));
         if (joints[i].position.z < 0)
             baseAngles[i].x *= -1;
     }
