@@ -21,7 +21,10 @@ var basePlatLen = 3,
     upperLegLen = 2.74,
     baseAngles = [];
 
+// HTML elements
 var sliders = [];
+var gcodeText;
+var textInFocus = false;
 var sliderMoved = false;
 var [xkey, ykey, zkey] = [0, 0, 0, 0];
 
@@ -63,17 +66,27 @@ function setupScene() {
 
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
-    window.addEventListener( 'resize', () => {
+    window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth/window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-    }, false );
+    }, false);
 
+    // HTML input setups
     sliders.push(document.getElementById('angle1'));
     sliders.push(document.getElementById('angle2'));
     sliders.push(document.getElementById('angle3'));
     for (var i = 0; i < 3; i++)
         sliders[i].addEventListener('input', handleSlider);
+
+    document.getElementById('gcode').addEventListener('focus', () => {
+        controls.enabled = false;
+        textInFocus = true;
+    }, false);
+    document.getElementById('gcode').addEventListener('focusout', () => {
+        controls.enabled = true;
+        textInFocus = false;
+    }, false);
 
     THREE.Object3D.DefaultMatrixAutoUpdate = AUTO_UPDATE_MATRIX;
 }
@@ -227,6 +240,9 @@ function moveRobot() {
 }
 
 function handleKeyDown(e) {
+    if (textInFocus) {
+        return;
+    }
     if (e.keyCode == 68) {
         xkey = 1;
     } else if (e.keyCode == 65) {

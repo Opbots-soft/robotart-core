@@ -4,22 +4,27 @@ canvas { width: 100vw; height: 100vh; display: block; }
 
 #control-panel {
     position: absolute;
-    border: 2px solid red;
+    border-radius: 5px;
     bottom: 40px;
     right: 60px;
     height: fit-content;
-    width: fit-content;
+    width: 200px;
 }
 
 #control-panel h2 {
     text-align: center;
-    width: 100px;
-    margin: 0;
+    width: 100%;
+    margin: 10px auto;
+}
+
+.triple-column input {
+    width: 20%;
+    margin: 10px;
 }
 
 .vranges {
     width: 100%;
-    height: calc(100% + 185px);
+    height: 200px;
     transform-origin: 50% 100%;
     transform: rotate(-90deg) translate(50%, 50%);
 }
@@ -33,22 +38,22 @@ canvas { width: 100vw; height: 100vh; display: block; }
 }
 
 .vranges input {
-    -webkit-appearance: none;  /* Override default CSS styles */
+    -webkit-appearance: none;
     appearance: none;
     width: 200px;
     height: 20px;
-    background: #d3d3d3; /* Grey background */
-    outline: none; /* Remove outline */
-    margin: 20px 0;
+    background: #d3d3d3;
+    outline: none;
+    margin: 22px 0;
     border-radius: 12px;
 }
 
 .vranges input::-webkit-slider-thumb {
-    -webkit-appearance: none; /* Override default look */
+    -webkit-appearance: none;
     appearance: none;
-    width: 20px; /* Set a specific slider handle width */
-    height: 20px; /* Slider handle height */
-    background: #4CAF50; /* Green background */
-    cursor: pointer; /* Cursor on hover */
+    width: 20px;
+    height: 20px;
+    background: #0088bb;
+    cursor: pointer;
     border-radius: 12px;
 }
