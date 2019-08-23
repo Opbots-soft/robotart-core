@@ -6,16 +6,26 @@
         <link rel="stylesheet" href="sim.css">
     </head>
     <body>
-        <div id="control-panel">
-            <textarea id="gcode">
-            At w3schools.com you will learn how to make a website. We offer free tutorials in all web development technologies.
-            </textarea>
-            <h2> Effector Position </h2>
-            <div class="triple-column">
-                <input type="number" name="quantity" min="0" max="90">
-                <input type="number" name="quantity" min="0" max="90">
-                <input type="number" name="quantity" min="0" max="90">
+        <div class="control-panel">
+            <h2> Script </h2>
+            <div class="script-panel">
+                <textarea id="gcode">
+                TestTest
+                </textarea>
+                <div>
+                    <button type="button">Switch to Point Mode</button>
+                    <button type="button">Play</button>
+                    <button type="button">Pause</button>
+                    <button type="button">Home</button>
+                </div>
             </div>
+            <h2> Effector Position </h2>
+            <div class="triple-num">
+                <input type="number" min="0" max="90">
+                <input type="number" min="0" max="90">
+                <input type="number" min="0" max="90">
+            </div>
+            <button type="button" style="margin: 10px 0;"> Center </button>
             <h2> Base Angles </h2>
             <div class="vranges">
                 <div>
@@ -24,10 +34,10 @@
                     <input type="range" id="angle3" min="0" max="1000">
                 </div>
             </div>
-            <div class="triple-column">
-                <input type="number" name="quantity" min="0" max="90">
-                <input type="number" name="quantity" min="0" max="90">
-                <input type="number" name="quantity" min="0" max="90">
+            <div class="triple-num">
+                <input type="number" min="0" max="90">
+                <input type="number" min="0" max="90">
+                <input type="number" min="0" max="90">
             </div>
         </div>
     </body>

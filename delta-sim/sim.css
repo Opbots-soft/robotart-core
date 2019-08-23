@@ -2,22 +2,50 @@ body { margin: 0; }
 
 canvas { width: 100vw; height: 100vh; display: block; }
 
-#control-panel {
+.control-panel {
     position: absolute;
     border-radius: 5px;
     bottom: 40px;
-    right: 60px;
+    right: 40px;
     height: fit-content;
-    width: 200px;
+    width: 300px;
+    text-align: center;
+    background: #9aacb3;
 }
 
-#control-panel h2 {
+.control-panel h2 {
     text-align: center;
     width: 100%;
     margin: 10px auto;
 }
 
-.triple-column input {
+.script-panel {
+    height: 250px;
+    margin: 15px 0;
+}
+
+.script-panel textarea {
+    display: inline-block;
+    width: 150px;
+    height: 100%;
+    vertical-align: top;
+    resize: none;
+    margin: 0;
+}
+
+.script-panel div {
+    display: inline-block;
+    width: 100px;
+    height: 100%;
+    vertical-align: top;
+}
+
+.script-panel button {
+    width: 100%;
+    margin: 10px;
+}
+
+.triple-num input {
     width: 20%;
     margin: 10px;
 }
@@ -27,6 +55,7 @@ canvas { width: 100vw; height: 100vh; display: block; }
     height: 200px;
     transform-origin: 50% 100%;
     transform: rotate(-90deg) translate(50%, 50%);
+    text-align: left;
 }
 
 .vranges div {
@@ -44,7 +73,7 @@ canvas { width: 100vw; height: 100vh; display: block; }
     height: 20px;
     background: #d3d3d3;
     outline: none;
-    margin: 22px 0;
+    margin: 35px 0;
     border-radius: 12px;
 }
 

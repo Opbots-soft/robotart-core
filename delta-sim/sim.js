@@ -268,7 +268,7 @@ function handleKeyUp(e) {
     }
 }
 
-function handleSlider(e) {
+function handleSlider() {
     sliderMoved = true;
 }
 
