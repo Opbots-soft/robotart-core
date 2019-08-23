@@ -1,0 +1,54 @@
+body { margin: 0; }
+
+canvas { width: 100vw; height: 100vh; display: block; }
+
+#control-panel {
+    position: absolute;
+    border: 2px solid red;
+    bottom: 40px;
+    right: 60px;
+    height: fit-content;
+    width: fit-content;
+}
+
+#control-panel h2 {
+    text-align: center;
+    width: 100px;
+    margin: 0;
+}
+
+.vranges {
+    width: 100%;
+    height: calc(100% + 185px);
+    transform-origin: 50% 100%;
+    transform: rotate(-90deg) translate(50%, 50%);
+}
+
+.vranges div {
+    position: absolute;
+    width: fit-content;
+    height: fit-content;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.vranges input {
+    -webkit-appearance: none;  /* Override default CSS styles */
+    appearance: none;
+    width: 200px;
+    height: 20px;
+    background: #d3d3d3; /* Grey background */
+    outline: none; /* Remove outline */
+    margin: 20px 0;
+    border-radius: 12px;
+}
+
+.vranges input::-webkit-slider-thumb {
+    -webkit-appearance: none; /* Override default look */
+    appearance: none;
+    width: 20px; /* Set a specific slider handle width */
+    height: 20px; /* Slider handle height */
+    background: #4CAF50; /* Green background */
+    cursor: pointer; /* Cursor on hover */
+    border-radius: 12px;
+}

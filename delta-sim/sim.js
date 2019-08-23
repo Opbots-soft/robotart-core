@@ -1,33 +1,29 @@
 // Constants
 var PI = 3.14159;
 var DT = 0.5;
+var PLAT_INCREMENT = 0.03;
 var THICKNESS = 0.3;
 var CIRCUM_RADIUS = 0.5774;
 var INSCRIBED_RADIUS = 0.2887;
-var UPPERPLAT_START_POS = 1.5;
+var UPPERPLAT_START_POS = 2;
 var AUTO_UPDATE_MATRIX = false;
 var ORIGIN = new THREE.Vector3(0, 0, 0);
 
 // Objects
-var scene, camera, renderer, controls, drag;
+var scene, camera, renderer, controls;
 var basePlat, baseLegs = [], joints = [],
     upperPlat, upperLegs = [];
-var sliders = [];
 
-// Parameters
+// Robot parameters
 var basePlatLen = 3,
     baseLegLen = 3,
     upperPlatLen = 0.75,
     upperLegLen = 2.74,
     baseAngles = [];
-var t = 0;
 
-/* 
- * 300 mm = basePlatLen
- * 300 mm = baseLegLen
- * 75 mm = upperPlatLen
- * 274 mm = upperLegLen
- */
+var sliders = [];
+var sliderMoved = false;
+var [xkey, ykey, zkey] = [0, 0, 0, 0];
 
 function setupScene() {
     scene = new THREE.Scene();
@@ -65,6 +61,14 @@ function setupScene() {
     var axesHelper = new THREE.AxesHelper( 5 );
     scene.add( axesHelper );
 
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    window.addEventListener( 'resize', () => {
+        camera.aspect = window.innerWidth/window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }, false );
+
     sliders.push(document.getElementById('angle1'));
     sliders.push(document.getElementById('angle2'));
     sliders.push(document.getElementById('angle3'));
@@ -75,6 +79,13 @@ function setupScene() {
 }
 
 function setupRobot() {
+    /* 
+    * 300 mm = basePlatLen
+    * 300 mm = baseLegLen
+    * 75 mm = upperPlatLen
+    * 274 mm = upperLegLen
+    */
+
     var blueMat = new THREE.MeshLambertMaterial({ color: 0x0088bb });
     var redMat = new THREE.MeshLambertMaterial({ color: 0xff3a3a });
     var purpleMat = new THREE.MeshLambertMaterial({ color: 0x7a5df9 });
@@ -91,7 +102,7 @@ function setupRobot() {
         bevelEnabled: false
     });
     basePlatGeo.translate(0, 0, -THICKNESS / 2);
-    basePlat = new THREE.Mesh(basePlatGeo, blueMat);
+    basePlat = new THREE.Mesh(basePlatGeo, purpleMat);
     scene.add(basePlat);
 
     var upperPlatGeo = new THREE.ExtrudeBufferGeometry(triangle, {
@@ -104,11 +115,6 @@ function setupRobot() {
     upperPlat = new THREE.Mesh(upperPlatGeo, redMat);
     upperPlat.position.z = UPPERPLAT_START_POS;
     scene.add(upperPlat);
-
-    drag = new THREE.DragControls([upperPlat], camera, renderer.domElement);
-    drag.addEventListener('dragstart', handleDragStart);
-    drag.addEventListener('dragend', handleDragEnd);
-    drag.addEventListener('drag', handleDrag);
 
     var baseLegGeo = new THREE.CylinderBufferGeometry(THICKNESS / 2, THICKNESS / 2, 1, 8);
     baseLegGeo.translate(0, 0.5, 0);
@@ -150,20 +156,14 @@ function setupRobot() {
 function animate() {
     requestAnimationFrame(animate);
 
-    //updateEffector();
-    updateRobot();
+    moveRobot();
+    updateMatrices();
 
     controls.update();
     renderer.render(scene, camera);
 }
 
-function updateEffector() {
-    upperPlat.position.z = 0.5 * Math.cos(t) + 4;
-    upperPlat.position.x = 0.5 * Math.sin(t);
-    t += DT;
-}
-
-function updateRobot() {
+function updateMatrices() {
     upperPlat.scale.x = upperPlatLen;
     upperPlat.scale.y = upperPlatLen;
 
@@ -210,30 +210,50 @@ function updateRobot() {
     }
 }
 
-function handleDragStart() {
-    controls.enabled = false;
+function moveRobot() {
+    if (xkey || ykey || zkey) {
+        upperPlat.position.x += xkey * PLAT_INCREMENT;
+        upperPlat.position.y += ykey * PLAT_INCREMENT;
+        upperPlat.position.z += zkey * PLAT_INCREMENT;
+        calculateBaseAngles();
+        for (var i = 0; i < 3; i++)
+            sliders[i].value = baseAngles[i].x * 180/PI * 1000/90;
+    } else if (sliderMoved) {
+        for (var i = 0; i < 3; i++)
+            baseAngles[i].x = sliders[i].value * 90/1000 * PI/180;
+        sliderMoved = false;
+        calculatePlatPosition();
+    }
 }
 
-function handleDragEnd() {
-    controls.enabled = true;
+function handleKeyDown(e) {
+    if (e.keyCode == 68) {
+        xkey = 1;
+    } else if (e.keyCode == 65) {
+        xkey = -1;
+    } else if (e.keyCode == 87) {
+        ykey = 1;
+    } else if (e.keyCode == 83) {
+        ykey = -1;
+    } else if (e.keyCode == 69) {
+        zkey = 1;
+    } else if (e.keyCode == 81) {
+        zkey = -1;
+    }
 }
 
-function handleDrag() {
-    calculateBaseAngles();
-    for (var i = 0; i < 3; i++)
-        sliders[i].value = baseAngles[i].x * 180/PI;
+function handleKeyUp(e) {
+    if (e.keyCode == 65 || e.keyCode == 68) {
+        xkey = 0;
+    } else if (e.keyCode == 87 || e.keyCode == 83) {
+        ykey = 0;
+    } else if (e.keyCode == 81 || e.keyCode == 69) {
+        zkey = 0;
+    }
 }
 
 function handleSlider(e) {
-    var angle = e.target.value * PI/180;
-    if (e.target.id == 'angle1')
-        baseAngles[0].x = angle;
-    else if (e.target.id == 'angle2')
-        baseAngles[1].x = angle;
-    else
-        baseAngles[2].x = angle;
-
-    calculatePlatPosition();
+    sliderMoved = true;
 }
 
 function calculateBaseAngles() {
@@ -246,15 +266,13 @@ function calculateBaseAngles() {
 
         var [p0, p1] = sphere_circle(centerS, upperLegLen, centerC, normal, baseLegLen);
 
+        baseAngles[i].x = (PI - p1.clone().sub(centerC).angleTo(ORIGIN.clone().sub(centerC))) * (p1.z < 0 ? -1 : 1);
         joints[i].position.copy(p1);
-        baseAngles[i].x = PI - p1.clone().sub(centerC).angleTo(ORIGIN.clone().sub(centerC));
-        if (joints[i].position.z < 0)
-            baseAngles[i].x *= -1;
     }
 }
 
 function calculatePlatPosition() {
-    updateRobot();
+    updateMatrices();
 
     var c0 = upperLegs[0].getWorldPosition(new THREE.Vector3());
     c0.y += -CIRCUM_RADIUS * upperPlatLen;
@@ -276,6 +294,3 @@ function calculatePlatPosition() {
 setupScene();
 setupRobot();
 animate();
-
-upperPlat.position.y = -CIRCUM_RADIUS * 0.5 * basePlatLen;
-calculateBaseAngles();
