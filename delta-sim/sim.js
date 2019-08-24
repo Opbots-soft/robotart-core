@@ -22,10 +22,10 @@ var basePlatLen = 3,
     baseAngles = [];
 
 // HTML elements
-var sliders = [];
+var sliders = [], angleText = [], posText = [];
 var gcodeText;
 var textInFocus = false;
-var sliderMoved = false;
+var sliderChanged = false, angleChanged = false, posChanged = false;
 var [xkey, ykey, zkey] = [0, 0, 0, 0];
 
 function setupScene() {
@@ -64,20 +64,29 @@ function setupScene() {
     var axesHelper = new THREE.AxesHelper( 5 );
     scene.add( axesHelper );
 
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('keyup', handleKeyUp);
     window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth/window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
     }, false);
 
+    THREE.Object3D.DefaultMatrixAutoUpdate = AUTO_UPDATE_MATRIX;
+
     // HTML input setups
     sliders.push(document.getElementById('angle1'));
     sliders.push(document.getElementById('angle2'));
     sliders.push(document.getElementById('angle3'));
-    for (var i = 0; i < 3; i++)
-        sliders[i].addEventListener('input', handleSlider);
+
+    angleText.push(document.getElementById('angle1txt'));
+    angleText.push(document.getElementById('angle2txt'));
+    angleText.push(document.getElementById('angle3txt'));
+
+    posText.push(document.getElementById('posx'));
+    posText.push(document.getElementById('posy'));
+    posText.push(document.getElementById('posz'));
+    
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
 
     document.getElementById('gcode').addEventListener('focus', () => {
         controls.enabled = false;
@@ -88,7 +97,7 @@ function setupScene() {
         textInFocus = false;
     }, false);
 
-    THREE.Object3D.DefaultMatrixAutoUpdate = AUTO_UPDATE_MATRIX;
+
 }
 
 function setupRobot() {
@@ -229,13 +238,52 @@ function moveRobot() {
         upperPlat.position.y += ykey * PLAT_INCREMENT;
         upperPlat.position.z += zkey * PLAT_INCREMENT;
         calculateBaseAngles();
-        for (var i = 0; i < 3; i++)
+
+        for (var i = 0; i < 3; i++) {
             sliders[i].value = baseAngles[i].x * 180/PI * 1000/90;
-    } else if (sliderMoved) {
-        for (var i = 0; i < 3; i++)
+            angleText[i].value = Math.round(baseAngles[i].x * 180/PI * 1000)/1000;
+        }
+        posText[0].value = upperPlat.position.x;
+        posText[1].value = upperPlat.position.y;
+        posText[2].value = upperPlat.position.z;
+    } else if (sliderChanged) {
+        for (var i = 0; i < 3; i++) {
             baseAngles[i].x = sliders[i].value * 90/1000 * PI/180;
-        sliderMoved = false;
+            angleText[i].value = Math.round(baseAngles[i].x * 180/PI * 1000)/1000;
+        }
         calculatePlatPosition();
+
+        posText[0].value = upperPlat.position.x;
+        posText[1].value = upperPlat.position.y;
+        posText[2].value = upperPlat.position.z;
+
+        sliderChanged = false;
+    } else if (angleChanged) {
+        for (var i = 0; i < 3; i++) {
+            baseAngles[i].x = angleText[i].value * PI/180;
+            sliders[i].value = angleText[i].value * 1000/90;
+        }
+        calculatePlatPosition();
+
+        posText[0].value = upperPlat.position.x;
+        posText[1].value = upperPlat.position.y;
+        posText[2].value = upperPlat.position.z;
+
+        angleChanged = false;
+    } else if (posChanged) {
+        upperPlat.position.x = parseInt(posText[0].value);
+        upperPlat.position.y = parseInt(posText[1].value);
+        upperPlat.position.z = parseInt(posText[2].value);
+        calculateBaseAngles();
+
+        console.log(upperPlat.position);
+
+        for (var i = 0; i < 3; i++) {
+            sliders[i].value = baseAngles[i].x * 180/PI * 1000/90;
+            angleText[i].value = Math.round(baseAngles[i].x * 180/PI * 1000)/1000;
+        }
+
+        posChanged = false;
     }
 }
 
@@ -269,7 +317,16 @@ function handleKeyUp(e) {
 }
 
 function handleSlider() {
-    sliderMoved = true;
+    sliderChanged = true;
+}
+
+function handleButton(name) {
+    console.log(name);
+}
+
+function handleNumber(type) {
+    angleChanged = type == 'angle';
+    posChanged = type == 'pos';
 }
 
 function calculateBaseAngles() {
@@ -310,3 +367,4 @@ function calculatePlatPosition() {
 setupScene();
 setupRobot();
 animate();
+calculateBaseAngles();

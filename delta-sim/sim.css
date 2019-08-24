@@ -45,12 +45,18 @@ canvas { width: 100vw; height: 100vh; display: block; }
     margin: 10px;
 }
 
-.triple-num input {
+.triple-angle input {
     width: 20%;
     margin: 10px;
 }
 
+.triple-pos input {
+    width: 20%;
+    margin: 0 10px;
+}
+
 .vranges {
+    position: relative;
     width: 100%;
     height: 200px;
     transform-origin: 50% 100%;
@@ -85,4 +91,9 @@ canvas { width: 100vw; height: 100vh; display: block; }
     background: #0088bb;
     cursor: pointer;
     border-radius: 12px;
+}
+
+.bring-front {
+    position: relative;
+    z-index: 30;
 }
