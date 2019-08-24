@@ -9,32 +9,37 @@
         <div class="control-panel">
             <h2> Script </h2>
             <div class="script-panel">
-                <textarea id="gcode"></textarea>
+                <textarea id="gcode">G01 X150 Y150 Z150
+G01 X0 Y0 Z0
+G01 X150 Y150 Z150
+G01 X0 Y0 Z0
+G01 X150 Y150 Z150
+G01 X0 Y0 Z0</textarea>
                 <div>
                     <button type="button" onclick="handleButton('mode')">Switch to Point Mode</button>
                     <button type="button" onclick="handleButton('play')">Play</button>
-                    <button type="button" onclick="handleButton('pause')">Pause</button>
+                    <button type="button" onclick="handleButton('stop')">Stop</button>
                     <button type="button" onclick="handleButton('home')">Home</button>
                 </div>
             </div>
             <h2> Effector Position </h2>
             <div class="triple-pos bring-front">
-                <input type="number" id="posx" onchange="handleNumber('pos')" min="0" max="90">
-                <input type="number" id="posy" onchange="handleNumber('pos')" min="0" max="90">
-                <input type="number" id="posz" onchange="handleNumber('pos')" min="0" max="90">
+                <input type="number" id="posx" onchange="handleNumber('pos')" min="0" max="10">
+                <input type="number" id="posy" onchange="handleNumber('pos')" min="0" max="10">
+                <input type="number" id="posz" onchange="handleNumber('pos')" min="0" max="10">
             </div>
             <h2> Base Angles </h2>
             <div class="vranges">
                 <div>
-                    <input type="range" id="angle1" oninput="handleSlider()" min="0" max="1000">
-                    <input type="range" id="angle2" oninput="handleSlider()" min="0" max="1000">
-                    <input type="range" id="angle3" oninput="handleSlider()" min="0" max="1000">
+                    <input type="range" id="angle1" oninput="handleSlider()" min="-500" max="500">
+                    <input type="range" id="angle2" oninput="handleSlider()" min="-500" max="500">
+                    <input type="range" id="angle3" oninput="handleSlider()" min="-500" max="500">
                 </div>
             </div>
             <div class="triple-angle">
-                <input type="number" id="angle1txt" onchange="handleNumber('angle')" min="0" max="90">
-                <input type="number" id="angle2txt" onchange="handleNumber('angle')" min="0" max="90">
-                <input type="number" id="angle3txt" onchange="handleNumber('angle')" min="0" max="90">
+                <input type="number" id="angle1txt" onchange="handleNumber('angle')" min="-90" max="90">
+                <input type="number" id="angle2txt" onchange="handleNumber('angle')" min="-90" max="90">
+                <input type="number" id="angle3txt" onchange="handleNumber('angle')" min="-90" max="90">
             </div>
         </div>
     </body>

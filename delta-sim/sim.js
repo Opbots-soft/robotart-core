@@ -1,6 +1,7 @@
 // Constants
 var PI = 3.14159;
-var DT = 0.5;
+var TICKS_PER_REV = 600;
+var MAX_ROTATION_SPEED = 1;
 var PLAT_INCREMENT = 0.03;
 var THICKNESS = 0.3;
 var CIRCUM_RADIUS = 0.5774;
@@ -23,10 +24,13 @@ var basePlatLen = 3,
 
 // HTML elements
 var sliders = [], angleText = [], posText = [];
-var gcodeText;
 var textInFocus = false;
-var sliderChanged = false, angleChanged = false, posChanged = false;
+var sliderChanged = false, angleChanged = false, posChanged = false, runningScript = false;
 var [xkey, ykey, zkey] = [0, 0, 0, 0];
+
+// GCODE animations
+var t = 0, prevT = 0;
+var instructions = [];
 
 function setupScene() {
     scene = new THREE.Scene();
@@ -233,58 +237,68 @@ function updateMatrices() {
 }
 
 function moveRobot() {
-    if (xkey || ykey || zkey) {
+    t = performance.now();
+    if (runningScript) {
+        var dists = [];
+        var max_ind = 0;
+        var dt = (t - prevT)/1000;
+
+        for (var i = 0; i < 3; i++) {
+            dists.push(instructions[0][i] - baseAngles[i].x);
+            if (Math.abs(dists[i]) > Math.abs(dists[max_ind]))
+                max_ind = i;
+        }
+
+        if (dists[max_ind] != 0) {
+            var max_dist = Math.abs(dists[max_ind]) > Math.abs(MAX_ROTATION_SPEED * dt) ? MAX_ROTATION_SPEED * dt * Math.sign(dists[max_ind]) : dists[max_ind];
+            baseAngles[max_ind].x += max_dist;
+    
+            var ind = (max_ind + 1)%3;
+            var dist = max_dist * dists[ind]/dists[max_ind];
+            baseAngles[ind].x += dist;
+            
+            ind = (max_ind + 2)%3;
+            dist = max_dist * dists[ind]/dists[max_ind];
+            baseAngles[ind].x += dist;
+    
+            calculatePlatPosition();
+            updateInputs();
+        } else {
+            instructions.shift();
+            if (instructions.length == 0)
+                runningScript = false;
+        }
+    } else if (xkey || ykey || zkey) {
         upperPlat.position.x += xkey * PLAT_INCREMENT;
         upperPlat.position.y += ykey * PLAT_INCREMENT;
         upperPlat.position.z += zkey * PLAT_INCREMENT;
         calculateBaseAngles();
 
-        for (var i = 0; i < 3; i++) {
-            sliders[i].value = baseAngles[i].x * 180/PI * 1000/90;
-            angleText[i].value = Math.round(baseAngles[i].x * 180/PI * 1000)/1000;
-        }
-        posText[0].value = upperPlat.position.x;
-        posText[1].value = upperPlat.position.y;
-        posText[2].value = upperPlat.position.z;
+        updateInputs();
     } else if (sliderChanged) {
-        for (var i = 0; i < 3; i++) {
-            baseAngles[i].x = sliders[i].value * 90/1000 * PI/180;
-            angleText[i].value = Math.round(baseAngles[i].x * 180/PI * 1000)/1000;
-        }
+        for (var i = 0; i < 3; i++)
+            baseAngles[i].x = sliders[i].value * 180/1000 * PI/180;
         calculatePlatPosition();
 
-        posText[0].value = upperPlat.position.x;
-        posText[1].value = upperPlat.position.y;
-        posText[2].value = upperPlat.position.z;
-
+        updateInputs();
         sliderChanged = false;
     } else if (angleChanged) {
-        for (var i = 0; i < 3; i++) {
+        for (var i = 0; i < 3; i++)
             baseAngles[i].x = angleText[i].value * PI/180;
-            sliders[i].value = angleText[i].value * 1000/90;
-        }
         calculatePlatPosition();
 
-        posText[0].value = upperPlat.position.x;
-        posText[1].value = upperPlat.position.y;
-        posText[2].value = upperPlat.position.z;
-
+        updateInputs();
         angleChanged = false;
     } else if (posChanged) {
-        upperPlat.position.x = parseInt(posText[0].value);
-        upperPlat.position.y = parseInt(posText[1].value);
-        upperPlat.position.z = parseInt(posText[2].value);
+        upperPlat.position.x = parseFloat(posText[0].value);
+        upperPlat.position.y = parseFloat(posText[1].value);
+        upperPlat.position.z = parseFloat(posText[2].value);
         calculateBaseAngles();
 
-        console.log(upperPlat.position);
-
-        for (var i = 0; i < 3; i++) {
-            sliders[i].value = baseAngles[i].x * 180/PI * 1000/90;
-            angleText[i].value = Math.round(baseAngles[i].x * 180/PI * 1000)/1000;
-        }
-
+        updateInputs();
         posChanged = false;
     }
+    prevT = t;
 }
 
 function handleKeyDown(e) {
@@ -321,12 +335,35 @@ function handleSlider() {
 }
 
 function handleButton(name) {
-    console.log(name);
+    if (name == 'play') {
+        runningScript = true;
+        var lines = document.getElementById('gcode').value.split('\n');
+        for (var i = 0; i < lines.length; i++) {
+            var nums = lines[i].match(/(?<=X|Y|Z)[0-9-]+/g);
+            for (var j = 0; j < nums.length; j++)
+                nums[j] = parseInt(nums[j]) * 2 * PI/TICKS_PER_REV + baseAngles[j].x;
+            instructions.push(nums);
+        }
+        console.log(instructions);
+    } else if (name == 'stop') {
+        runningScript = false;
+        instructions = [];
+    }
 }
 
 function handleNumber(type) {
     angleChanged = type == 'angle';
     posChanged = type == 'pos';
+}
+
+function updateInputs() {
+    for (var i = 0; i < 3; i++) {
+        sliders[i].value = baseAngles[i].x * 180/PI * 1000/180;
+        angleText[i].value = Math.round(baseAngles[i].x * 180/PI * 1000)/1000;
+    }
+    posText[0].value = upperPlat.position.x;
+    posText[1].value = upperPlat.position.y;
+    posText[2].value = upperPlat.position.z;
 }
 
 function calculateBaseAngles() {
@@ -367,4 +404,3 @@ function calculatePlatPosition() {
 setupScene();
 setupRobot();
 animate();
-calculateBaseAngles();
