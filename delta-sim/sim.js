@@ -1,7 +1,7 @@
 // Constants
 var PI = 3.14159;
 var TICKS_PER_REV = 600;
-var MAX_ROTATION_SPEED = 1;
+var MAX_ROTATION_SPEED = 0.8;
 var PLAT_INCREMENT = 0.03;
 var THICKNESS = 0.3;
 var CIRCUM_RADIUS = 0.5774;
@@ -344,7 +344,6 @@ function handleButton(name) {
                 nums[j] = parseInt(nums[j]) * 2 * PI/TICKS_PER_REV + baseAngles[j].x;
             instructions.push(nums);
         }
-        console.log(instructions);
     } else if (name == 'stop') {
         runningScript = false;
         instructions = [];
@@ -404,3 +403,6 @@ function calculatePlatPosition() {
 setupScene();
 setupRobot();
 animate();
+upperPlat.position.copy(new THREE.Vector3(0, -1.86, 2.9));
+calculateBaseAngles();
+updateInputs();
