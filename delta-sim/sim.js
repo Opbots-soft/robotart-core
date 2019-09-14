@@ -3,7 +3,7 @@ var PI = 3.14159;
 var TICKS_PER_REV = 600;
 var MAX_ROTATION_SPEED = 0.8;
 var PLAT_INCREMENT = 0.03;
-var THICKNESS = 0.3;
+var THICKNESS = 0.1;
 var CIRCUM_RADIUS = 0.5774;
 var INSCRIBED_RADIUS = 0.2887;
 var UPPERPLAT_START_POS = 2;
@@ -17,9 +17,9 @@ var basePlat, baseLegs = [], joints = [],
 
 // Robot parameters
 var basePlatLen = 3,
-    baseLegLen = 3,
+    baseLegLen = 2.74,
     upperPlatLen = 0.75,
-    upperLegLen = 2.74,
+    upperLegLen = 3,
     baseAngles = [];
 
 // HTML elements
