@@ -1,3 +1,5 @@
+//Author: Kausik Krishnakumar (2019)
+
 // Constants
 var PI = 3.14159;
 var TICKS_PER_REV = 600;
@@ -107,9 +109,9 @@ function setupScene() {
 function setupRobot() {
     /* 
     * 300 mm = basePlatLen
-    * 300 mm = baseLegLen
+    * 274 mm = baseLegLen
     * 75 mm = upperPlatLen
-    * 274 mm = upperLegLen
+    * 300 mm = upperLegLen
     */
 
     var blueMat = new THREE.MeshLambertMaterial({ color: 0x0088bb });
@@ -182,8 +184,8 @@ function setupRobot() {
 function animate() {
     requestAnimationFrame(animate);
 
-    moveRobot();
-    updateMatrices();
+    if (moveRobot())
+        updateMatrices();
 
     controls.update();
     renderer.render(scene, camera);
@@ -237,7 +239,14 @@ function updateMatrices() {
 }
 
 function moveRobot() {
+    /* 
+     * Returns true if position updated, false otherwise
+     * Must run updateMatrices() after calling moveRobot() to update animation
+     */
+
+    let moved = true;
     t = performance.now();
+
     if (runningScript) {
         var dists = [];
         var max_ind = 0;
@@ -297,8 +306,11 @@ function moveRobot() {
 
         updateInputs();
         posChanged = false;
-    }
+    } else
+        moved = false;
+
     prevT = t;
+    return moved;
 }
 
 function handleKeyDown(e) {
@@ -400,9 +412,48 @@ function calculatePlatPosition() {
         upperLegs[i].getWorldPosition(joints[i].position);
 }
 
+function calculateWorkspace() {
+    let checkRadius = 3.5;
+    let checkEnd = 5.8;
+    let checkStart = 1;
+    var angles = [2*PI, 2*PI, 2*PI];
+    var dr = 0.05, dtheta = 0.05;
+
+    var geometry = new THREE.BufferGeometry();
+    var material = new THREE.PointsMaterial( { color: 0x000055, size: 0.02 } );
+    var positions = [];
+
+    for (var z = checkStart; z <= checkEnd; z += dr) {
+        for (var theta = 0; theta < 2*PI; theta += dtheta) {
+            var r = checkRadius;
+            var closest = null;
+            while (r > 0) {
+                var platPos = new THREE.Vector3(r*Math.cos(theta), r*Math.sin(theta), z);
+                for (var i = 0; i < 3; i++) {
+                    var centerC = baseLegs[i].position.clone();
+                    var centerS = platPos;
+                    centerS.x += i > 0 ? (1.5 - i) * upperPlatLen : 0;
+                    centerS.y += i ? -INSCRIBED_RADIUS * upperPlatLen : CIRCUM_RADIUS * upperPlatLen;
+                    var normal = new THREE.Vector3(-baseLegs[i].position.y, baseLegs[i].position.x, 0).normalize();
+                    var [p0, p1] = sphere_circle(centerS, upperLegLen, centerC, normal, baseLegLen);
+                    angles[i] = (PI - p1.clone().sub(centerC).angleTo(ORIGIN.clone().sub(centerC))) * (p1.z < 0 ? -1 : 1);
+                }
+                r -= dr;
+                if (angles[0] >= PI/2 - 0.1 ||
+                    angles[1] >= PI/2 - 0.1 ||
+                    angles[2] >= PI/2 - 0.1)
+                    closest = [r*Math.cos(theta), r*Math.sin(theta), z];
+                else
+                    break;
+            }
+            positions.push(closest[0], closest[1], closest[2]);
+        }
+    }
+    geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+    var line = new THREE.Points(geometry, material);
+    scene.add(line);
+}
+
 setupScene();
 setupRobot();
 animate();
-upperPlat.position.copy(new THREE.Vector3(0, -1.86, 2.9));
-calculateBaseAngles();
-updateInputs();

@@ -1,3 +1,4 @@
+// Author: Kausik Krishnakumar (2019)
 // https://gamedev.stackexchange.com/questions/75756/sphere-sphere-intersection-and-circle-sphere-intersection
 
 /* 
@@ -12,15 +13,15 @@
  *          p1 - THREE.Vector3, 2nd intersection
  */
 function sphere_circle(c1, r1, c2, n2, r2) {
-    var d = n2.dot(c2.clone().sub(c1));
-    var centerP = c1.clone().addScaledVector(n2, d);
-    var radiusP = Math.sqrt(r1*r1 - d*d);
+    let d = n2.dot(c2.clone().sub(c1));
+    let centerP = c1.clone().addScaledVector(n2, d);
+    let radiusP = Math.sqrt(r1*r1 - d*d);
 
-    var [centerI, normalI, radiusI] = sphere_sphere(centerP, radiusP, c2, r2);
-    var tangent = centerP.clone().sub(c2).cross(n2).normalize();
+    let [centerI, normalI, radiusI] = sphere_sphere(centerP, radiusP, c2, r2);
+    let tangent = centerP.clone().sub(c2).cross(n2).normalize();
 
-    var p0 = centerI.clone().addScaledVector(tangent, radiusI);
-    var p1 = centerI.clone().addScaledVector(tangent, -radiusI);
+    let p0 = centerI.clone().addScaledVector(tangent, radiusI);
+    let p1 = centerI.clone().addScaledVector(tangent, -radiusI);
 
     return [p0, p1];
 }
@@ -37,12 +38,12 @@ function sphere_circle(c1, r1, c2, n2, r2) {
  *          radius - Number, radius of circle
  */
 function sphere_sphere(c1, r1, c2, r2) {
-    var d2 = c2.distanceToSquared(c1);
-    var h = 0.5 + (r1*r1 - r2*r2)/(2*d2);
+    let d2 = c2.distanceToSquared(c1);
+    let h = 0.5 + (r1*r1 - r2*r2)/(2*d2);
 
-    var center = c1.clone().addScaledVector(c2.clone().sub(c1), h);
-    var radius = Math.sqrt(r1*r1 - h*h*d2);
-    var normal = c1.clone().sub(c2).normalize();
+    let center = c1.clone().addScaledVector(c2.clone().sub(c1), h);
+    let radius = Math.sqrt(r1*r1 - h*h*d2);
+    let normal = c1.clone().sub(c2).normalize();
 
     return [center, normal, radius];
 }
