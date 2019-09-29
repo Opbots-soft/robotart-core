@@ -11,10 +11,12 @@ BP = 3
 UP = 0.75
 BL = 2.74
 UL = 3
+TICKS_PER_REV = 600
 
 CIRCUM_RADIUS = 0.5774
 INSCRIBED_RADIUS = 0.2887
-TICKS_PER_REV = 600
+ORIGIN = np.zeros(3)
+PI = np.pi
 
 normalize = lambda x: x * 1/np.linalg.norm(x)
 
@@ -72,20 +74,49 @@ class Control(object):
                 p0 - np.array of len=3, 1st intersection
                 p1 - np.array of len=3, 2nd intersection
         '''
-        d = n2 * (c2 - c1)
+        d = np.dot(n2, c2 - c1)
         centerP = c1 + d * n2
         radiusP = np.sqrt(r1*r1 - d*d)
 
-        centerI, normalI, radiusI = sphere_sphere(centerP, radiusP, c2, r2)
+        centerI, normalI, radiusI = self.sphere_sphere(centerP, radiusP, c2, r2)
         tangent = normalize(np.cross(centerP - c2, n2))
 
         p0 = centerI + tangent * radiusI
         p1 = centerI - tangent * radiusI
 
-        return p0, p1    // HTML input setups
+        return p0, p1
 
-    def calc_angle(pos):
-        pass
+    def calc_angle(self, pos):
+        angles = np.zeros(3)
+        for i in range(3):
+            centerS = np.copy(pos)
+            if i == 0:
+                centerS = centerS + [0, CIRCUM_RADIUS * UP, 0]
+                centerC = np.array([0, INSCRIBED_RADIUS * BP, 0])
+            elif i == 1:
+                centerS = centerS + [0.5 * UP, -INSCRIBED_RADIUS * UP, 0]
+                centerC = np.array([0.25 * BP, (INSCRIBED_RADIUS - CIRCUM_RADIUS)/2 * BP, 0])
+            elif i == 2:
+                centerS = centerS + [-0.5 * UP, -INSCRIBED_RADIUS * UP, 0]
+                centerC = np.array([-0.25 * BP, (INSCRIBED_RADIUS - CIRCUM_RADIUS)/2 * BP, 0])
+            normal = normalize(np.array([-centerC[1], centerC[0], 0]))
 
-    def calc_plat_pos(angles):
-        pass
+            p0, p1 = self.sphere_circle(centerS, UL, centerC, normal, BL);
+
+            angles[i] = PI - np.arccos(np.clip(np.dot(normalize(p1 - centerC), normalize(ORIGIN - centerC)), -1, 1))
+            angles[i] = angles[i] * (-1 if p1[2] < 0 else 1)
+        return angles
+
+    def calc_plat_pos(self, angles):
+        c0 = np.array([0, INSCRIBED_RADIUS * BP + np.cos(angles[0]) * BL, np.sin(angles[0]) * BL])
+        c1 = np.array([0.25 * BP + np.cos(angles[1]) * np.cos(PI/6) * BL, (INSCRIBED_RADIUS - CIRCUM_RADIUS)/2 * BP - np.cos(angles[1]) * np.sin(PI/6) * BL, np.sin(angles[1]) * BL])
+        c2 = np.array([-(0.25 * BP + np.cos(angles[2]) * np.cos(PI/6) * BL), (INSCRIBED_RADIUS - CIRCUM_RADIUS)/2 * BP - np.cos(angles[2]) * np.sin(PI/6) * BL, np.sin(angles[2]) * BL])
+        c0 = c0 + [0, -CIRCUM_RADIUS * UP, 0]
+        c1 = c1 + [-0.5 * UP, INSCRIBED_RADIUS * UP, 0]
+        c2 = c2 + [0.5 * UP, INSCRIBED_RADIUS * UP, 0]
+        print(c0,c1,c2)
+
+        center, normal, radius = self.sphere_sphere(c0, UL, c1, UL);
+        p0, p1 = self.sphere_circle(c2, UL, center, normal, radius);
+
+        return p1
