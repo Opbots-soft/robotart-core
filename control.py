@@ -114,7 +114,6 @@ class Control(object):
         c0 = c0 + [0, -CIRCUM_RADIUS * UP, 0]
         c1 = c1 + [-0.5 * UP, INSCRIBED_RADIUS * UP, 0]
         c2 = c2 + [0.5 * UP, INSCRIBED_RADIUS * UP, 0]
-        print(c0,c1,c2)
 
         center, normal, radius = self.sphere_sphere(c0, UL, c1, UL)
         p0, p1 = self.sphere_circle(c2, UL, center, normal, radius)
