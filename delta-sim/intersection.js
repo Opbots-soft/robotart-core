@@ -27,7 +27,7 @@ function sphere_circle(c1, r1, c2, n2, r2) {
 }
 
 /* 
- * Calculate intersection between two spheres
+ * Calculate intersections between two spheres
  * 
  * Args:    c1 - THREE.Vector3, center of sphere
  *          r1 - Number, radius of sphere
