@@ -86,7 +86,7 @@ class Control(object):
 
         return p0, p1
 
-    def calc_angle(self, pos):
+    def calc_angles(self, pos):
         angles = np.zeros(3)
         for i in range(3):
             centerS = np.copy(pos)
@@ -101,7 +101,7 @@ class Control(object):
                 centerC = np.array([-0.25 * BP, (INSCRIBED_RADIUS - CIRCUM_RADIUS)/2 * BP, 0])
             normal = normalize(np.array([-centerC[1], centerC[0], 0]))
 
-            p0, p1 = self.sphere_circle(centerS, UL, centerC, normal, BL);
+            p0, p1 = self.sphere_circle(centerS, UL, centerC, normal, BL)
 
             angles[i] = PI - np.arccos(np.clip(np.dot(normalize(p1 - centerC), normalize(ORIGIN - centerC)), -1, 1))
             angles[i] = angles[i] * (-1 if p1[2] < 0 else 1)
@@ -116,7 +116,7 @@ class Control(object):
         c2 = c2 + [0.5 * UP, INSCRIBED_RADIUS * UP, 0]
         print(c0,c1,c2)
 
-        center, normal, radius = self.sphere_sphere(c0, UL, c1, UL);
-        p0, p1 = self.sphere_circle(c2, UL, center, normal, radius);
+        center, normal, radius = self.sphere_sphere(c0, UL, c1, UL)
+        p0, p1 = self.sphere_circle(c2, UL, center, normal, radius)
 
         return p1
