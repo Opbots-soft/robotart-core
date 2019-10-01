@@ -110,3 +110,4 @@ ENV/
 
 .vscode
 .idea
+path.gcode
