@@ -2,7 +2,7 @@
 
 // Constants
 var PI = 3.14159;
-var TICKS_PER_REV = 1000;
+var TICKS_PER_REV = 600;
 var MAX_ROTATION_SPEED = 0.8;
 var PLAT_INCREMENT = 0.03;
 var THICKNESS = 0.2;
