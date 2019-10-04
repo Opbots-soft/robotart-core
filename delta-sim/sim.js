@@ -363,6 +363,8 @@ function handleButton(name) {
         for (var i = 0; i < 3; i++)
             angleText[i].value = 0;
         angleChanged = true;
+    } else if (name == 'workspace') {
+        calculateWorkspace();
     }
 }
 
@@ -420,41 +422,39 @@ function calculateWorkspace() {
     let checkRadius = 3.5;
     let checkEnd = 5.8;
     let checkStart = 1;
-    var angles = [2*PI, 2*PI, 2*PI];
-    var dr = 0.05, dtheta = 0.05;
+    let angles = [2*PI, 2*PI, 2*PI];
+    let dr = 0.05, dtheta = 0.05;
 
-    var geometry = new THREE.BufferGeometry();
-    var material = new THREE.PointsMaterial( { color: 0x000055, size: 0.02 } );
-    var positions = [];
+    let geometry = new THREE.BufferGeometry();
+    let material = new THREE.PointsMaterial( { color: 0x000055, size: 0.02 } );
+    let positions = [];
 
-    for (var z = checkStart; z <= checkEnd; z += dr) {
-        for (var theta = 0; theta < 2*PI; theta += dtheta) {
-            var r = checkRadius;
-            var closest = null;
+    for (let z = checkStart; z <= checkEnd; z += dr) {
+        for (let theta = 0; theta < 2*PI; theta += dtheta) {
+            let r = checkRadius;
+            let closest = null;
             while (r > 0) {
-                var platPos = new THREE.Vector3(r*Math.cos(theta), r*Math.sin(theta), z);
-                for (var i = 0; i < 3; i++) {
-                    var centerC = baseLegs[i].position.clone();
-                    var centerS = platPos;
+                closest = new THREE.Vector3(r*Math.cos(theta), r*Math.sin(theta), z);
+                var intersects = true;
+                for (let i = 0; i < 3; i++) {
+                    let centerC = baseLegs[i].position.clone();
+                    let centerS = closest;
                     centerS.x += i > 0 ? (1.5 - i) * upperPlatLen : 0;
                     centerS.y += i ? -INSCRIBED_RADIUS * upperPlatLen : CIRCUM_RADIUS * upperPlatLen;
-                    var normal = new THREE.Vector3(-baseLegs[i].position.y, baseLegs[i].position.x, 0).normalize();
-                    var [p0, p1] = sphere_circle(centerS, upperLegLen, centerC, normal, baseLegLen);
-                    angles[i] = (PI - p1.clone().sub(centerC).angleTo(ORIGIN.clone().sub(centerC))) * (p1.z < 0 ? -1 : 1);
+                    let normal = new THREE.Vector3(-baseLegs[i].position.y, baseLegs[i].position.x, 0).normalize();
+                    let result = sphere_intersects_circle(centerS, upperLegLen, centerC, normal, baseLegLen);
+                    console.log(result);
+                    intersects &= result;
                 }
                 r -= dr;
-                if (angles[0] >= PI/2 - 0.1 ||
-                    angles[1] >= PI/2 - 0.1 ||
-                    angles[2] >= PI/2 - 0.1)
-                    closest = [r*Math.cos(theta), r*Math.sin(theta), z];
-                else
+                if (!intersects)
                     break;
             }
-            positions.push(closest[0], closest[1], closest[2]);
+            positions.push(closest.x, closest.y, closest.z);
         }
     }
     geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
-    var line = new THREE.Points(geometry, material);
+    let line = new THREE.Points(geometry, material);
     scene.add(line);
 }
 

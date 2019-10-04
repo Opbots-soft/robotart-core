@@ -47,3 +47,20 @@ function sphere_sphere(c1, r1, c2, r2) {
 
     return [center, normal, radius];
 }
+
+/* 
+ * Checks if sphere and circle intersects
+ * 
+ * Args:    c1 - THREE.Vector3, center of sphere
+ *          r1 - Number, radius of sphere
+ *          c2 - THREE.Vector3, center of circle
+ *          n2 - THREE.Vector3, normal of circle
+ *          r2 - Number, radius of circle
+ * Returns: intersects - boolean, true if objects intersect, false otherwise
+ */
+function sphere_intersects_circle(c1, r1, c2, n2, r2) {
+    let d = c2.clone().sub(c1).projectOnVector(n2);
+    if (d.length() > r1)
+        return false;
+    return Math.sqrt(r1*r1 - d.lengthSq()) + r2 >= c1.clone().add(d).distanceTo(c2);
+}

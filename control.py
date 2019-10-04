@@ -115,6 +115,7 @@ if __name__ == '__main__':
     blank_image = np.zeros([width, height, 3])
     blank_image[:,:] = (255, 255, 255)
     path_resolution = 3
+    y_coord = 0
     points = []
 
     def handle_mouse(event, x, y, flags, params):
@@ -130,7 +131,7 @@ if __name__ == '__main__':
 
     con = Control()
     for i in range(len(points)):
-        points[i] = np.array([points[i][0]/height * (bounds[3] - bounds[2]) + bounds[2], 0,
+        points[i] = np.array([points[i][0]/height * (bounds[3] - bounds[2]) + bounds[2], y_coord,
                      (height - points[i][1])/width * (bounds[1] - bounds[0]) + bounds[0]])
 
     commands = []
@@ -138,9 +139,9 @@ if __name__ == '__main__':
     for i in range(len(points) - 1):
         sep = points[i + 1] - points[i]
 
-        to_gcode = lambda x: 'G01 X' + str(int(angle[0] * 180/np.pi * TICKS_PER_REV/360)) \
-                              + ' Y' + str(int(angle[1] * 180/np.pi * TICKS_PER_REV/360)) \
-                              + ' Z' + str(int(angle[2] * 180/np.pi * TICKS_PER_REV/360))
+        to_gcode = lambda x: 'G01 X' + str(int(x[0] * 180/np.pi * TICKS_PER_REV/360)) \
+                              + ' Y' + str(int(x[1] * 180/np.pi * TICKS_PER_REV/360)) \
+                              + ' Z' + str(int(x[2] * 180/np.pi * TICKS_PER_REV/360))
         
         for t in np.linspace(0, 1, path_resolution, False):
             angle = con.calc_angles(points[i] + sep * t)
