@@ -11,6 +11,7 @@
  *          r2 - Number, radius of circle
  * Returns: p0 - THREE.Vector3, 1st intersection
  *          p1 - THREE.Vector3, 2nd intersection
+ *          null if no intersection exists
  */
 function sphere_circle(c1, r1, c2, n2, r2) {
     let d = n2.dot(c2.clone().sub(c1));
@@ -18,6 +19,8 @@ function sphere_circle(c1, r1, c2, n2, r2) {
     let radiusP = Math.sqrt(r1*r1 - d*d);
 
     let [centerI, normalI, radiusI] = sphere_sphere(centerP, radiusP, c2, r2);
+    if (isNaN(radiusI))
+        return [null, null];
     let tangent = centerP.clone().sub(c2).cross(n2).normalize();
 
     let p0 = centerI.clone().addScaledVector(tangent, radiusI);
@@ -46,24 +49,4 @@ function sphere_sphere(c1, r1, c2, r2) {
     let normal = c1.clone().sub(c2).normalize();
 
     return [center, normal, radius];
-}
-
-/* 
- * Checks if sphere and circle intersects
- * 
- * Args:    c1 - THREE.Vector3, center of sphere
- *          r1 - Number, radius of sphere
- *          c2 - THREE.Vector3, center of circle
- *          n2 - THREE.Vector3, normal of circle
- *          r2 - Number, radius of circle
- * Returns: intersects - boolean, true if objects intersect, false otherwise
- */
-function sphere_intersects_circle(c1, r1, c2, n2, r2) {
-    let d = n2.dot(c2.clone().sub(c1));
-    let centerP = c1.clone().addScaledVector(n2, d);
-    let radiusP = Math.sqrt(r1*r1 - d*d);
-    let d2 = c2.distanceToSquared(centerP);
-    let h = 0.5 + (radiusP*radiusP - r2*r2)/(2*d2);
-
-    return !isNaN(Math.sqrt(radiusP*radiusP - h*h*d2));
 }

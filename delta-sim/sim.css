@@ -4,13 +4,11 @@ canvas { width: 100vw; height: 100vh; display: block; }
 
 .control-panel {
     position: absolute;
-    border-radius: 5px;
     bottom: 40px;
     right: 40px;
     height: fit-content;
     width: 300px;
     text-align: center;
-    background: #9aacb3;
 }
 
 .control-panel h2 {

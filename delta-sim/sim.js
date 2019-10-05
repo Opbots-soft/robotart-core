@@ -11,6 +11,7 @@ var INSCRIBED_RADIUS = 0.2887;
 var UPPERPLAT_START_POS = 2;
 var AUTO_UPDATE_MATRIX = false;
 var ORIGIN = new THREE.Vector3(0, 0, 0);
+var WORKSPACE_BOUNDS = { radius: 3.5, zstart: 1, zend: 5.8};  // Defines the cylinder in which to calculate the robot's workspace
 
 // Objects
 var scene, camera, renderer, controls;
@@ -22,13 +23,18 @@ var basePlatLen = 3,
     baseLegLen = 2.74,
     upperPlatLen = 0.75,
     upperLegLen = 3,
+    baseAngleLowerLims = [0, 0, 0],
+    baseAngleUpperLims = [PI/2, PI/2, PI/2],
     baseAngles = [];
 
 // HTML elements
 var sliders = [], angleText = [], posText = [];
 var textInFocus = false;
-var sliderChanged = false, angleChanged = false, posChanged = false, runningScript = false;
-var [xkey, ykey, zkey] = [0, 0, 0, 0];
+var sliderChanged = false,
+    angleChanged = false,
+    posChanged = false,
+    runningScript = false;
+    [xkey, ykey, zkey] = [0, 0, 0, 0];
 
 // GCODE animations
 var t = 0, prevT = 0;
@@ -392,70 +398,95 @@ function calculateBaseAngles() {
         var normal = new THREE.Vector3(-baseLegs[i].position.y, baseLegs[i].position.x, 0).normalize();
 
         var [p0, p1] = sphere_circle(centerS, upperLegLen, centerC, normal, baseLegLen);
-
-        baseAngles[i].x = (PI - p1.clone().sub(centerC).angleTo(ORIGIN.clone().sub(centerC))) * (p1.z < 0 ? -1 : 1);
-        joints[i].position.copy(p1);
+        if (!(p0 == null && p1 == null)) {
+            baseAngles[i].x = (PI - p1.clone().sub(centerC).angleTo(ORIGIN.clone().sub(centerC))) * (p1.z < 0 ? -1 : 1);
+            joints[i].position.copy(p1);
+        }
     }
 }
 
 function calculatePlatPosition() {
-    updateMatrices();
+    var c0 = new THREE.Vector3(0,
+            INSCRIBED_RADIUS * basePlatLen + Math.cos(baseAngles[0].x) * baseLegLen,
+            Math.sin(baseAngles[0].x) * baseLegLen);
+    var c1 = new THREE.Vector3(0.25 * basePlatLen + Math.cos(baseAngles[1].x) * Math.cos(PI/6) * baseLegLen,
+            (INSCRIBED_RADIUS - CIRCUM_RADIUS)/2 * basePlatLen - Math.cos(baseAngles[1].x) * Math.sin(PI/6) * baseLegLen,
+            Math.sin(baseAngles[1].x) * baseLegLen);
+    var c2 = new THREE.Vector3(-(0.25 * basePlatLen + Math.cos(baseAngles[2].x) * Math.cos(PI/6) * baseLegLen),
+            (INSCRIBED_RADIUS - CIRCUM_RADIUS)/2 * basePlatLen - Math.cos(baseAngles[2].x) * Math.sin(PI/6) * baseLegLen,
+            Math.sin(baseAngles[2].x) * baseLegLen)
 
-    var c0 = upperLegs[0].getWorldPosition(new THREE.Vector3());
+    joints[0].position.copy(c0);
+    joints[1].position.copy(c1);
+    joints[2].position.copy(c2);
+
     c0.y += -CIRCUM_RADIUS * upperPlatLen;
-    var c1 = upperLegs[1].getWorldPosition(new THREE.Vector3());
     c1.x += -0.5 * upperPlatLen;
     c1.y += INSCRIBED_RADIUS * upperPlatLen;
-    var c2 = upperLegs[2].getWorldPosition(new THREE.Vector3());
     c2.x += 0.5 * upperPlatLen;
     c2.y += INSCRIBED_RADIUS * upperPlatLen;
 
     var [center, normal, radius] = sphere_sphere(c0, upperLegLen, c1, upperLegLen);
     var [p0, p1] = sphere_circle(c2, upperLegLen, center, normal, radius);
 
-    upperPlat.position.copy(p1);
-    for (var i = 0; i < 3; i++)
-        upperLegs[i].getWorldPosition(joints[i].position);
+    if (!(p0 == null && p1 == null))
+        upperPlat.position.copy(p1);
 }
 
 function calculateWorkspace() {
-    let checkRadius = 3.5;
-    let checkEnd = 5.8;
-    let checkStart = 1;
-    let angles = [2*PI, 2*PI, 2*PI];
-    let dr = 0.05, dtheta = 0.05;
+    let dr = 0.05, dz = 0.05, dtheta = 0.05;
 
     let geometry = new THREE.BufferGeometry();
     let material = new THREE.PointsMaterial( { color: 0x000055, size: 0.02 } );
-    let positions = [];
+    let positions = [], centroids = [];
 
-    for (let z = checkStart; z <= checkEnd; z += dr) {
+    for (let z = WORKSPACE_BOUNDS.zstart; z <= WORKSPACE_BOUNDS.zend; z += dz) {
         for (let theta = 0; theta < 2*PI; theta += dtheta) {
-            let r = 0;
+            let r = WORKSPACE_BOUNDS.radius;
             let closest = null;
-            while (r < checkRadius) {
+            let angles = [-5, -5, -5];
+            let prevValid = false;
+            while (r > 0) {
                 closest = new THREE.Vector3(r*Math.cos(theta), r*Math.sin(theta), z);
-                var intersects = true;
+                angles = [-5, -5, -5];
                 for (let i = 0; i < 3; i++) {
                     let centerC = baseLegs[i].position.clone();
                     let centerS = closest.clone();
                     centerS.x += i > 0 ? (1.5 - i) * upperPlatLen : 0;
                     centerS.y += i ? -INSCRIBED_RADIUS * upperPlatLen : CIRCUM_RADIUS * upperPlatLen;
                     let normal = new THREE.Vector3(-baseLegs[i].position.y, baseLegs[i].position.x, 0).normalize();
-                    intersects &= sphere_intersects_circle(centerS, upperLegLen, centerC, normal, baseLegLen);
+                    let [p0, p1] = sphere_circle(centerS, upperLegLen, centerC, normal, baseLegLen);
+                    if (!(p0 == null || p1 == null))
+                        angles[i] = (PI - p1.clone().sub(centerC).angleTo(ORIGIN.clone().sub(centerC))) * (p1.z < 0 ? -1 : 1);
+                    else
+                        break;
                 }
-                r += dr;
-                if (!intersects)
-                    break;
+                r -= dr;
+                if (angles[0] > baseAngleLowerLims[0] &&
+                    angles[1] > baseAngleLowerLims[1] &&
+                    angles[2] > baseAngleLowerLims[2] &&
+                    angles[0] < baseAngleUpperLims[0] &&
+                    angles[1] < baseAngleUpperLims[1] &&
+                    angles[2] < baseAngleUpperLims[2]) {
+                    if (!prevValid) {
+                        positions.push(closest.x, closest.y, closest.z);
+                        prevValid = true;
+                    }
+                } else if (prevValid) {
+                    positions.push(closest.x, closest.y, closest.z);
+                    prevValid = false;
+                }
             }
-            positions.push(closest.x, closest.y, closest.z);
         }
     }
-    geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( positions, 3 ) );
+    geometry.addAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     let line = new THREE.Points(geometry, material);
     scene.add(line);
 }
 
 setupScene();
 setupRobot();
+updateMatrices();
+calculateBaseAngles();
+updateMatrices();
 animate();
