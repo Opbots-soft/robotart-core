@@ -109,10 +109,10 @@ class Control(object):
         return p1
 
 if __name__ == '__main__':
-    bounds = (1.5, 5, -1.6, 1.6)
-    width = 500
-    height = 500
-    blank_image = np.zeros([width, height, 3])
+    bounds = (1.5, 5.0, -1.6, 1.6)
+    width = 500.0
+    height = 500.0
+    blank_image = np.zeros([int(width), int(height), 3])
     blank_image[:,:] = (255, 255, 255)
     path_resolution = 3
     y_coord = 0
@@ -135,7 +135,7 @@ if __name__ == '__main__':
                      (height - points[i][1])/width * (bounds[1] - bounds[0]) + bounds[0]])
 
     commands = []
-    f = open('path.gcode', 'w')
+    f = open('path.gcode', 'w+')
     for i in range(len(points) - 1):
         sep = points[i + 1] - points[i]
 
