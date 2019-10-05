@@ -61,7 +61,7 @@ function setupScene() {
     var planeGeometry = new THREE.PlaneBufferGeometry( 100, 100, 1, 1 );
     var planeMaterial = new THREE.MeshLambertMaterial( { color: 0x777777 } )
     var plane = new THREE.Mesh( planeGeometry, planeMaterial );
-    plane.position.copy(new THREE.Vector3(0, -CIRCUM_RADIUS * basePlatLen - 0.5, 0));
+    plane.position.copy(new THREE.Vector3(0, -CIRCUM_RADIUS * basePlatLen - 1, 0));
     plane.quaternion.setFromEuler(new THREE.Euler(-PI/2, 0, 0));
     plane.updateMatrix();
     plane.receiveShadow = true;
@@ -431,22 +431,20 @@ function calculateWorkspace() {
 
     for (let z = checkStart; z <= checkEnd; z += dr) {
         for (let theta = 0; theta < 2*PI; theta += dtheta) {
-            let r = checkRadius;
+            let r = 0;
             let closest = null;
-            while (r > 0) {
+            while (r < checkRadius) {
                 closest = new THREE.Vector3(r*Math.cos(theta), r*Math.sin(theta), z);
                 var intersects = true;
                 for (let i = 0; i < 3; i++) {
                     let centerC = baseLegs[i].position.clone();
-                    let centerS = closest;
+                    let centerS = closest.clone();
                     centerS.x += i > 0 ? (1.5 - i) * upperPlatLen : 0;
                     centerS.y += i ? -INSCRIBED_RADIUS * upperPlatLen : CIRCUM_RADIUS * upperPlatLen;
                     let normal = new THREE.Vector3(-baseLegs[i].position.y, baseLegs[i].position.x, 0).normalize();
-                    let result = sphere_intersects_circle(centerS, upperLegLen, centerC, normal, baseLegLen);
-                    console.log(result);
-                    intersects &= result;
+                    intersects &= sphere_intersects_circle(centerS, upperLegLen, centerC, normal, baseLegLen);
                 }
-                r -= dr;
+                r += dr;
                 if (!intersects)
                     break;
             }

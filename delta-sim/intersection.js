@@ -59,8 +59,11 @@ function sphere_sphere(c1, r1, c2, r2) {
  * Returns: intersects - boolean, true if objects intersect, false otherwise
  */
 function sphere_intersects_circle(c1, r1, c2, n2, r2) {
-    let d = c2.clone().sub(c1).projectOnVector(n2);
-    if (d.length() > r1)
-        return false;
-    return Math.sqrt(r1*r1 - d.lengthSq()) + r2 >= c1.clone().add(d).distanceTo(c2);
+    let d = n2.dot(c2.clone().sub(c1));
+    let centerP = c1.clone().addScaledVector(n2, d);
+    let radiusP = Math.sqrt(r1*r1 - d*d);
+    let d2 = c2.distanceToSquared(centerP);
+    let h = 0.5 + (radiusP*radiusP - r2*r2)/(2*d2);
+
+    return !isNaN(Math.sqrt(radiusP*radiusP - h*h*d2));
 }
