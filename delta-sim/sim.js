@@ -11,6 +11,7 @@ var INSCRIBED_RADIUS = 0.2887;
 var UPPERPLAT_START_POS = 2;
 var AUTO_UPDATE_MATRIX = false;
 var ORIGIN = new THREE.Vector3(0, 0, 0);
+var ZUNIT = new THREE.Vector3(0, 0, 1);
 var WORKSPACE_BOUNDS = { radius: 3.5, zstart: 1, zend: 5.8};  // Defines the cylinder in which to calculate the robot's workspace
 
 // Objects
@@ -25,6 +26,7 @@ var basePlatLen = 3,
     upperLegLen = 3,
     baseAngleLowerLims = [0, 0, 0],
     baseAngleUpperLims = [PI/2, PI/2, PI/2],
+    balljointLimit = 55/2 * PI/180;
     baseAngles = [];
 
 // HTML elements
@@ -43,6 +45,7 @@ var instructions = [];
 function setupScene() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    // camera = new THREE.OrthographicCamera(-5, 5, 5, -5, 0.1, 1000);
     camera.position.z = 7;
 
     renderer = new THREE.WebGLRenderer();
@@ -108,8 +111,6 @@ function setupScene() {
         controls.enabled = true;
         textInFocus = false;
     }, false);
-
-
 }
 
 function setupRobot() {
@@ -438,17 +439,19 @@ function calculateWorkspace() {
 
     let geometry = new THREE.BufferGeometry();
     let material = new THREE.PointsMaterial( { color: 0x000055, size: 0.02 } );
-    let positions = [], centroids = [];
+    let positions = [];
 
     for (let z = WORKSPACE_BOUNDS.zstart; z <= WORKSPACE_BOUNDS.zend; z += dz) {
         for (let theta = 0; theta < 2*PI; theta += dtheta) {
             let r = WORKSPACE_BOUNDS.radius;
             let closest = null;
             let angles = [-5, -5, -5];
+            let balljointAngles = [-1, -1, -1];
             let prevValid = false;
             while (r > 0) {
                 closest = new THREE.Vector3(r*Math.cos(theta), r*Math.sin(theta), z);
                 angles = [-5, -5, -5];
+                balljoint_angles = [-1, -1, -1];
                 for (let i = 0; i < 3; i++) {
                     let centerC = baseLegs[i].position.clone();
                     let centerS = closest.clone();
@@ -456,18 +459,24 @@ function calculateWorkspace() {
                     centerS.y += i ? -INSCRIBED_RADIUS * upperPlatLen : CIRCUM_RADIUS * upperPlatLen;
                     let normal = new THREE.Vector3(-baseLegs[i].position.y, baseLegs[i].position.x, 0).normalize();
                     let [p0, p1] = sphere_circle(centerS, upperLegLen, centerC, normal, baseLegLen);
-                    if (!(p0 == null || p1 == null))
+                    if (!(p0 == null || p1 == null)) {
                         angles[i] = (PI - p1.clone().sub(centerC).angleTo(ORIGIN.clone().sub(centerC))) * (p1.z < 0 ? -1 : 1);
-                    else
+                        balljointAngles[i] = centerC.clone().sub(p1).projectOnPlane(ZUNIT).angleTo(centerS.clone().sub(p1).projectOnPlane(ZUNIT));
+                        balljointAngles[i] = baseAngles[i].x > PI/2 ? PI - balljointAngles[i] : balljointAngles[i];
+                    } else
                         break;
                 }
                 r -= dr;
+
                 if (angles[0] > baseAngleLowerLims[0] &&
                     angles[1] > baseAngleLowerLims[1] &&
                     angles[2] > baseAngleLowerLims[2] &&
                     angles[0] < baseAngleUpperLims[0] &&
                     angles[1] < baseAngleUpperLims[1] &&
-                    angles[2] < baseAngleUpperLims[2]) {
+                    angles[2] < baseAngleUpperLims[2] &&
+                    balljointAngles[0] < balljointLimit &&
+                    balljointAngles[1] < balljointLimit &&
+                    balljointAngles[2] < balljointLimit) {
                     if (!prevValid) {
                         positions.push(closest.x, closest.y, closest.z);
                         prevValid = true;
