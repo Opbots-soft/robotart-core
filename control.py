@@ -1,5 +1,5 @@
 # https://gamedev.stackexchange.com/questions/75756/sphere-sphere-intersection-and-circle-sphere-intersection
-# Author: Kausik Krishnakumar
+# Author: Kausik Krishnakumar (2019)
 
 import time
 import serial
@@ -13,6 +13,7 @@ UP = 0.75
 BL = 2.74
 UL = 3
 TICKS_PER_REV = 600
+PATH_RESOLUTION = 4
 
 CIRCUM_RADIUS = 0.5774
 INSCRIBED_RADIUS = 0.2887
@@ -114,7 +115,6 @@ if __name__ == '__main__':
     height = 500.0
     blank_image = np.zeros([int(width), int(height), 3])
     blank_image[:,:] = (255, 255, 255)
-    path_resolution = 3
     y_coord = 0
     points = []
 
@@ -134,6 +134,8 @@ if __name__ == '__main__':
         points[i] = np.array([points[i][0]/height * (bounds[3] - bounds[2]) + bounds[2], y_coord,
                      (height - points[i][1])/width * (bounds[1] - bounds[0]) + bounds[0]])
 
+    # points = [np.array([-1, 0, 1.5]), np.array([-1, 0, 4]), np.array([1, 0, 4]), np.array([1, 0, 1.5])]
+
     commands = []
     f = open('path.gcode', 'w+')
     for i in range(len(points) - 1):
@@ -143,7 +145,7 @@ if __name__ == '__main__':
                               + ' Y' + str(int(x[1] * 180/np.pi * TICKS_PER_REV/360)) \
                               + ' Z' + str(int(x[2] * 180/np.pi * TICKS_PER_REV/360))
         
-        for t in np.linspace(0, 1, path_resolution, False):
+        for t in np.linspace(0, 1, PATH_RESOLUTION, False):
             angle = con.calc_angles(points[i] + sep * t)
             command = to_gcode(angle) + '\n'
             if not command in commands:
