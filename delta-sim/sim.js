@@ -359,9 +359,15 @@ function handleButton(name) {
         var lines = document.getElementById('gcode').value.split('\n');
         for (var i = 0; i < lines.length; i++) {
             var nums = lines[i].match(/(?<=X|Y|Z)[0-9-]+/g);
-            for (var j = 0; j < nums.length; j++)
-                nums[j] = parseInt(nums[j]) * 2 * PI/TICKS_PER_REV + baseAngles[j].x;
-            instructions.push(nums);
+            if (nums == null)
+                runningScript = false;
+            else if (nums.length < 3)
+                runningScript = false;
+            else {
+                for (var j = 0; j < nums.length; j++)
+                    nums[j] = parseInt(nums[j]) * 2 * PI/TICKS_PER_REV + baseAngles[j].x;
+                instructions.push(nums);
+            }
         }
     } else if (name == 'stop') {
         runningScript = false;
@@ -498,4 +504,5 @@ setupRobot();
 updateMatrices();
 calculateBaseAngles();
 updateMatrices();
+updateInputs();
 animate();

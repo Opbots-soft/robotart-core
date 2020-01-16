@@ -19,20 +19,18 @@
                 </div>
             </div>
             <h2> Effector Position </h2>
-            <div class="triple-pos bring-front">
+            <div class="triple-input bring-front">
                 <input type="number" id="posx" onchange="handleNumber('pos')" min="0" max="10">
                 <input type="number" id="posy" onchange="handleNumber('pos')" min="0" max="10">
                 <input type="number" id="posz" onchange="handleNumber('pos')" min="0" max="10">
             </div>
             <h2> Base Angles </h2>
             <div class="vranges">
-                <div>
-                    <input type="range" id="angle1" oninput="handleSlider()" min="-500" max="500">
-                    <input type="range" id="angle2" oninput="handleSlider()" min="-500" max="500">
-                    <input type="range" id="angle3" oninput="handleSlider()" min="-500" max="500">
-                </div>
+                <input type="range" id="angle1" oninput="handleSlider()" min="-500" max="500">
+                <input type="range" id="angle2" oninput="handleSlider()" min="-500" max="500">
+                <input type="range" id="angle3" oninput="handleSlider()" min="-500" max="500">
             </div>
-            <div class="triple-angle">
+            <div class="triple-input">
                 <input type="number" id="angle1txt" onchange="handleNumber('angle')" min="-180" max="180">
                 <input type="number" id="angle2txt" onchange="handleNumber('angle')" min="-180" max="180">
                 <input type="number" id="angle3txt" onchange="handleNumber('angle')" min="-180" max="180">
