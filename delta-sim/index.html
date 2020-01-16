@@ -1,25 +1,52 @@
+<!-- Author: Kausik Krishnakumar (2019) -->
 <!DOCTYPE html>
 <html>
     <head>
         <meta charset=utf-8>
         <title>Delta Robot Simulation</title>
         <link rel="stylesheet" href="sim.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap">
     </head>
     <body>
         <div id="overlay"></div>
-        <div class="control-panel">
+        <div class="help"></div>
+        <div id="control-panel">
             <h2> Script </h2>
             <div class="script-panel">
-                <textarea id="gcode"></textarea>
+                <textarea id="gcode">
+// This is a script
+// which moves the
+// end effector
+// to the corners
+// of a square.
+HOME
+G01 X48 Y92 Z-13
+DELAY 1000
+G01 X53 Y87 Z9
+G01 X62 Y89 Z27
+G01 X72 Y96 Z43
+G01 X85 Y105 Z60
+G01 X81 Y92 Z69
+G01 X79 Y79 Z79
+G01 X81 Y69 Z92
+G01 X85 Y60 Z105
+G01 X72 Y43 Z96
+G01 X62 Y27 Z89
+G01 X53 Y9 Z87
+G01 X48 Y-13 Z92
+G01 X40 Y9 Z65
+G01 X37 Y37 Z37
+G01 X40 Y65 Z9
+                </textarea>
                 <div>
-                    <button type="button" onclick="handleButton('workspace')">Calculate workspace</button>
-                    <button type="button" onclick="handleButton('play')">Play</button>
-                    <button type="button" onclick="handleButton('stop')">Stop</button>
-                    <button type="button" onclick="handleButton('home')">Home</button>
+                    <button type="button" onclick="handleButton(this)">Show workspace</button>
+                    <button type="button" onclick="handleButton(this)">Play</button>
+                    <button type="button" onclick="handleButton(this)">Stop</button>
+                    <button type="button" onclick="handleButton(this)">Home</button>
                 </div>
             </div>
             <h2> Effector Position </h2>
-            <div class="triple-input bring-front">
+            <div class="triple-input">
                 <input type="number" id="posx" onchange="handleNumber('pos')" min="0" max="10">
                 <input type="number" id="posy" onchange="handleNumber('pos')" min="0" max="10">
                 <input type="number" id="posz" onchange="handleNumber('pos')" min="0" max="10">
@@ -35,6 +62,8 @@
                 <input type="number" id="angle2txt" onchange="handleNumber('angle')" min="-180" max="180">
                 <input type="number" id="angle3txt" onchange="handleNumber('angle')" min="-180" max="180">
             </div>
+            <div class="backshadow"></div>
+            <div class="toggle" onclick="handleButton(this)">🗙</div>
         </div>
     </body>
     <script src="threejs/three.min.js"></script>

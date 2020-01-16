@@ -134,7 +134,7 @@ if __name__ == '__main__':
         points[i] = np.array([points[i][0]/height * (bounds[3] - bounds[2]) + bounds[2], y_coord,
                      (height - points[i][1])/width * (bounds[1] - bounds[0]) + bounds[0]])
 
-    # points = [np.array([-1, 0, 1.5]), np.array([-1, 0, 4]), np.array([1, 0, 4]), np.array([1, 0, 1.5])]
+    points = [np.array([-1, 0, 1.5]), np.array([-1, 0, 4]), np.array([1, 0, 4]), np.array([1, 0, 1.5]), np.array([-1, 0, 1.5])]
 
     commands = []
     f = open('path.gcode', 'w+')

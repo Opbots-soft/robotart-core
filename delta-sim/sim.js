@@ -51,7 +51,7 @@ function setupScene() {
     renderer = new THREE.WebGLRenderer();
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.setSize(window.innerWidth, window.innerHeight - 5);
+    renderer.setSize(window.innerWidth, window.innerHeight);
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     document.body.appendChild(renderer.domElement);
 
@@ -255,34 +255,44 @@ function moveRobot() {
     t = performance.now();
 
     if (runningScript) {
-        var dists = [];
-        var max_ind = 0;
-        var dt = (t - prevT)/1000;
-
-        for (var i = 0; i < 3; i++) {
-            dists.push(instructions[0][i] - baseAngles[i].x);
-            if (Math.abs(dists[i]) > Math.abs(dists[max_ind]))
-                max_ind = i;
-        }
-
-        if (dists[max_ind] != 0) {
-            var max_dist = Math.abs(dists[max_ind]) > Math.abs(MAX_ROTATION_SPEED * dt) ? MAX_ROTATION_SPEED * dt * Math.sign(dists[max_ind]) : dists[max_ind];
-            baseAngles[max_ind].x += max_dist;
-    
-            var ind = (max_ind + 1)%3;
-            var dist = max_dist * dists[ind]/dists[max_ind];
-            baseAngles[ind].x += dist;
-            
-            ind = (max_ind + 2)%3;
-            dist = max_dist * dists[ind]/dists[max_ind];
-            baseAngles[ind].x += dist;
-    
-            calculatePlatPosition();
-            updateInputs();
+        if (instructions[0].length == 1) {
+            moved = false;
+            instructions[0][0] -= (t - prevT)/1000;
+            if (instructions[0][0] <= 0) {
+                instructions.shift();
+                if (instructions.length == 0)
+                    runningScript = false;
+            }
         } else {
-            instructions.shift();
-            if (instructions.length == 0)
-                runningScript = false;
+            let dists = [];
+            let max_ind = 0;
+            let dt = (t - prevT)/1000;
+
+            for (var i = 0; i < 3; i++) {
+                dists.push(instructions[0][i] - baseAngles[i].x);
+                if (Math.abs(dists[i]) > Math.abs(dists[max_ind]))
+                    max_ind = i;
+            }
+
+            if (dists[max_ind] != 0) {
+                var max_dist = Math.abs(dists[max_ind]) > Math.abs(MAX_ROTATION_SPEED * dt) ? MAX_ROTATION_SPEED * dt * Math.sign(dists[max_ind]) : dists[max_ind];
+                baseAngles[max_ind].x += max_dist;
+        
+                var ind = (max_ind + 1)%3;
+                var dist = max_dist * dists[ind]/dists[max_ind];
+                baseAngles[ind].x += dist;
+                
+                ind = (max_ind + 2)%3;
+                dist = max_dist * dists[ind]/dists[max_ind];
+                baseAngles[ind].x += dist;
+        
+                calculatePlatPosition();
+                updateInputs();
+            } else {
+                instructions.shift();
+                if (instructions.length == 0)
+                    runningScript = false;
+            }
         }
     } else if (xkey || ykey || zkey) {
         upperPlat.position.x += xkey * PLAT_INCREMENT;
@@ -353,31 +363,51 @@ function handleSlider() {
     sliderChanged = true;
 }
 
-function handleButton(name) {
-    if (name == 'play') {
-        runningScript = true;
-        var lines = document.getElementById('gcode').value.split('\n');
-        for (var i = 0; i < lines.length; i++) {
-            var nums = lines[i].match(/(?<=X|Y|Z)[0-9-]+/g);
-            if (nums == null)
-                runningScript = false;
-            else if (nums.length < 3)
-                runningScript = false;
-            else {
-                for (var j = 0; j < nums.length; j++)
-                    nums[j] = parseInt(nums[j]) * 2 * PI/TICKS_PER_REV + baseAngles[j].x;
-                instructions.push(nums);
+function handleButton(elem) {
+    let name = elem.innerText;
+    if (name == 'Play') {
+        let home = false;
+        let lines = document.getElementById('gcode').value.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+            let angles = lines[i].match(/(?<=X|Y|Z)[0-9-]+/g);
+            let delay = lines[i].match(/(?<=DELAY )[0-9]+/g);
+
+            if (lines[i].includes('//')) {
+                // Do nothing
+            } else if (lines[i].includes('HOME')) {
+                instructions.push([0, 0, 0]);
+                home = true;
+            } else if (delay != null) {
+                instructions.push([parseInt(delay[0])/1000]);
+            } else if (angles != null) {
+                if (angles.length == 3) {
+                    for (let j = 0; j < angles.length; j++)
+                        angles[j] = parseInt(angles[j]) * 2 * PI/TICKS_PER_REV + (home ? 0 : baseAngles[j].x);
+                    instructions.push(angles);
+                }
             }
         }
-    } else if (name == 'stop') {
+        if (instructions.length >= 1)
+            runningScript = true;
+    } else if (name == 'Stop') {
         runningScript = false;
         instructions = [];
-    } else if (name == 'home') {
-        for (var i = 0; i < 3; i++)
+    } else if (name == 'Home') {
+        for (let i = 0; i < 3; i++)
             angleText[i].value = 0;
         angleChanged = true;
-    } else if (name == 'workspace') {
+    } else if (name == 'Show workspace') {
         calculateWorkspace();
+        elem.innerText = 'Hide workspace'
+    } else if (name == 'Hide workspace') {
+        scene.remove(scene.getObjectByName('workspace'));
+        elem.innerText = 'Show workspace'
+    } else if (name == '⯇') {
+        document.getElementById('control-panel').classList.toggle('collapse');
+        elem.innerText = '🗙';
+    } else if (name == '🗙') {
+        document.getElementById('control-panel').classList.toggle('collapse');
+        elem.innerText = '⯇';
     }
 }
 
@@ -496,6 +526,7 @@ function calculateWorkspace() {
     }
     geometry.addAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     let line = new THREE.Points(geometry, material);
+    line.name = "workspace";
     scene.add(line);
 }
 
