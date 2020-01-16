@@ -36,6 +36,14 @@ canvas { width: 100vw; height: 100vh; display: block; }
    visibility: visible !important;
 }
 
+.wasd {
+    font-size: 20px;
+    border: 1px solid black;
+    border-radius: 4px;
+    margin: 0 3px;
+    padding: 0 5px;
+} 
+
 .close {
     position: absolute;
     line-height: 35px;

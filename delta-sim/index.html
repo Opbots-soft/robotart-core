@@ -63,10 +63,14 @@ G01 X40 Y65 Z9
             <div class="backshadow"></div>
             <div class="toggle" onclick="handleButton('toggle', this)">🗙</div>
         </div>
-        <h1 class="about" onclick="handleButton('about', this)">About RobotArt</h1>
+        <h1 class="about" onclick="handleButton('about', this)">Controls</h1>
         <div id="overlay">
             <div class="close" onclick="handleButton('close', this)">🗙</div>
-            <h1>RobotArt</h1>
+            <p><span class="wasd">D</span><span class="wasd">A</span> to move end effector along <span style="color: red">X-AXIS</span></p>
+            <p><span class="wasd">W</span><span class="wasd">S</span> to move end effector along <span style="color: green">Y-AXIS</span></p>
+            <p><span class="wasd">Q</span><span class="wasd">E</span> to move end effector along <span style="color: blue">Z-AXIS</span></p>
+            <p><span class="wasd">Left click + drag</span> to rotate camera</p>
+            <p><span class="wasd">Right click + drag</span> to pan camera</p>
         </div>
     </body>
     <script src="threejs/three.min.js"></script>
