@@ -1,4 +1,4 @@
-//Author: Kausik Krishnakumar (2019)
+// Author: Kausik Krishnakumar (2019)
 
 // Constants
 var PI = 3.14159;
@@ -363,9 +363,8 @@ function handleSlider() {
     sliderChanged = true;
 }
 
-function handleButton(elem) {
-    let name = elem.innerText;
-    if (name == 'Play') {
+function handleButton(name, elem) {
+    if (name == 'play') {
         let home = false;
         let lines = document.getElementById('gcode').value.split('\n');
         for (let i = 0; i < lines.length; i++) {
@@ -389,25 +388,31 @@ function handleButton(elem) {
         }
         if (instructions.length >= 1)
             runningScript = true;
-    } else if (name == 'Stop') {
+    } else if (name == 'stop') {
         runningScript = false;
         instructions = [];
-    } else if (name == 'Home') {
+    } else if (name == 'home') {
         for (let i = 0; i < 3; i++)
             angleText[i].value = 0;
         angleChanged = true;
-    } else if (name == 'Show workspace') {
-        calculateWorkspace();
-        elem.innerText = 'Hide workspace'
-    } else if (name == 'Hide workspace') {
-        scene.remove(scene.getObjectByName('workspace'));
-        elem.innerText = 'Show workspace'
-    } else if (name == '⯇') {
-        document.getElementById('control-panel').classList.toggle('collapse');
-        elem.innerText = '🗙';
-    } else if (name == '🗙') {
-        document.getElementById('control-panel').classList.toggle('collapse');
-        elem.innerText = '⯇';
+    } else if (name == 'workspace') {
+        if (elem.innerText == 'Show workspace') {
+            calculateWorkspace();
+            elem.innerText = 'Hide workspace'
+        } else {
+            scene.remove(scene.getObjectByName('workspace'));
+            elem.innerText = 'Show workspace'
+        }
+    } else if (name == 'toggle') {
+        if (elem.innerText == '⯇') {
+            document.getElementById('control-panel').classList.toggle('collapse');
+            elem.innerText = '🗙';
+        } else {
+            document.getElementById('control-panel').classList.toggle('collapse');
+            elem.innerText = '⯇';
+        }
+    } else if (name == 'about' || name == 'close') {
+        document.getElementById('overlay').classList.toggle('show-overlay');
     }
 }
 

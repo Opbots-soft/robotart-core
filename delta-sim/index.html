@@ -8,8 +8,6 @@
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap">
     </head>
     <body>
-        <div id="overlay"></div>
-        <div class="help"></div>
         <div id="control-panel">
             <h2> Script </h2>
             <div class="script-panel">
@@ -39,10 +37,10 @@ G01 X37 Y37 Z37
 G01 X40 Y65 Z9
                 </textarea>
                 <div>
-                    <button type="button" onclick="handleButton(this)">Show workspace</button>
-                    <button type="button" onclick="handleButton(this)">Play</button>
-                    <button type="button" onclick="handleButton(this)">Stop</button>
-                    <button type="button" onclick="handleButton(this)">Home</button>
+                    <button type="button" onclick="handleButton('workspace', this)">Show workspace</button>
+                    <button type="button" onclick="handleButton('play', this)">Play</button>
+                    <button type="button" onclick="handleButton('stop', this)">Stop</button>
+                    <button type="button" onclick="handleButton('home', this)">Home</button>
                 </div>
             </div>
             <h2> Effector Position </h2>
@@ -63,7 +61,12 @@ G01 X40 Y65 Z9
                 <input type="number" id="angle3txt" onchange="handleNumber('angle')" min="-180" max="180">
             </div>
             <div class="backshadow"></div>
-            <div class="toggle" onclick="handleButton(this)">🗙</div>
+            <div class="toggle" onclick="handleButton('toggle', this)">🗙</div>
+        </div>
+        <h1 class="about" onclick="handleButton('about', this)">About RobotArt</h1>
+        <div id="overlay">
+            <div class="close" onclick="handleButton('close', this)">🗙</div>
+            <h1>RobotArt</h1>
         </div>
     </body>
     <script src="threejs/three.min.js"></script>
