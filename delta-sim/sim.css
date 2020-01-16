@@ -33,11 +33,12 @@ canvas { width: 100vw; height: 100vh; display: block; }
     transform: translateX(318px);
 }
 
-.control-panel h2 {
+#control-panel h2 {
     text-align: center;
     width: 100%;
     margin: 10px auto;
     font-family: 'Roboto Mono', monospace;
+    font-size: 20px;
 }
 
 .script-panel {
@@ -69,6 +70,8 @@ canvas { width: 100vw; height: 100vh; display: block; }
     margin-bottom: 20px;
     border: none;
     padding: 5px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 12px;
     transition: background-color 500ms;
 }
 
@@ -105,7 +108,7 @@ canvas { width: 100vw; height: 100vh; display: block; }
     position: absolute;
     top: 0;
     left: 0;
-    height: calc(100% - 30px);
+    height: calc(100% - 35px);
     width: 100%;
     border-top-left-radius: 15px;
     box-shadow: -2px -2px 2px 0 rgb(141, 141, 141);
@@ -114,11 +117,11 @@ canvas { width: 100vw; height: 100vh; display: block; }
 
 .toggle {
     position: absolute;
-    height: 30px;
-    width: 30px;
+    height: 35px;
+    width: 35px;
     bottom: 0;
-    left: -30px;
-    font-size: 20px;
+    left: -35px;
+    font-size: 25px;
     cursor: pointer;
     border-top-left-radius: 8px;
     background: rgba(255, 255, 255, 0.4);
